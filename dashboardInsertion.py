@@ -66,4 +66,4 @@ for location in writelocation:
                                      'Transmitted_Time': tsmtTime 
                                  }}, upsert=True)
     
-    db.LAST_UPDATED.update({'dbname': "DASHBORAD_DATA"}, {'$set': {'last_updated_time': time.time()}})
+    db.LAST_UPDATED.update({'dbname': "DASHBOARD_DATA"}, {'$set': {'last_updated_time': time.time()}})
