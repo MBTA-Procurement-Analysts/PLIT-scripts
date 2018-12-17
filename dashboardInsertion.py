@@ -41,6 +41,12 @@ for location in writelocation:
     dbname = 'rubix-' + serverlocation + '-' + location 
     print('Using database ' + dbname)
     db = client[dbname]
+    # We drop the collection everytime we refresh the dashboard data, since
+    #   the upstream query is a snapshot and records come and go in the query.
+    # There will be no way to detect if the record is not in the query anymore
+    #   than removing anything that is not in the current query; and dropping
+    #   the entire collection and then adds the current items is faster.
+    db.DASHBOARD_DATA.drop()
     for row in tqdm(insertionItems.itertuples()):
         if pd.isna(row.Transmitted_Time):
         	tsmtTime = ""
