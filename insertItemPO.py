@@ -58,7 +58,7 @@ for location in writelocation:
     
     for row in tqdm(insertionItems.itertuples()):
         db.ITEM_DATA.update({'Item_No': row.Item}, 
-                {'$addToSet':
+                {'$push':
                     {'Previous_PO': 
                         {'PO_No': row.PO_No, 
                             'Name': row.Name, 
