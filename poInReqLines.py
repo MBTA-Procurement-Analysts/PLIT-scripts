@@ -51,8 +51,8 @@ for location in writelocation:
         db.REQ_DATA.update_one({"$and": [{"REQ_No": row.Req_ID}, 
                                             {"Business_Unit": row.Unit}]},
                                  {"$set": {"lines.$[l].PO": {
-                                     "PO_No": row.PO_No, 
-                                     "PO_Line": row.PO_Line}}},
+                                     "PO_Number": row.PO_No, 
+                                     "Line_No": row.PO_Line}}},
                                  array_filters=[{"l.Line_No": row.REQ_Line}])
 
     db.LAST_UPDATED.update({'dbname': "PO_DATA_IN_REQ"}, {
