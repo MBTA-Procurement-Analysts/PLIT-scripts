@@ -11,8 +11,9 @@ import sys
 from datetime import datetime
 import os
 from tqdm import tqdm
+import re
 
-po_status = {"A": "Approved",
+PO_STATUS_DICT = {"A": "Approved",
              "C": "Complete",
              "D": "Dispatched",
              "I": "Initial",
@@ -21,22 +22,42 @@ po_status = {"A": "Approved",
              "PX": "Pending Cancel",
              "X": "Cancelled"}
 
+PO_WL_STATUS = {
+    "I": "Initiated",
+    "A": "Approved",
+    "D": "Denied"
+}
+
+internal_pattern = re.compile(r".*Procurement.*", re.I)
+
+class BundledPOError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
 
 def is_valid_po(po):
     # status is not canceled
     # PO 'C' status is "Completer"
-    valid_status = not (po["PO_Approval_Date"] ==
-                        "" and po["Status"] in {"C", "D"})
+    valid_status = not (po.get("PO_Approval_Date", "") =="" and po["Status"] in {"C", "D"})
+    if not valid_status:
+        print("{} is not a valid PO with Approval Date of {} and Status of {}".format(po["PO_No"], po.get("PO_Approval_Date", ""), po["Status"]))
     return valid_status
 
+
+def checkBundledPO(po):
+    reqs = set([line["Requisition_Data"]["Req_ID"] for line in po["lines"] if line.get("Requisition_Data", None)])
+    if len(reqs) > 1:
+        raise BundledPOError("[BundledPO] {} REQs found with {}.".format(len(reqs), po["PO_No"]))
 
 def getPOs(dbclient, req_lines_po_set):
     pos = []
     for po_num in req_lines_po:
         for db_po in db.PO_DATA.find({"$and": [{"PO_No": po_num},
                                                {"Business_Unit": req["Business_Unit"]}]}):
-            if db_po and is_valid_po(db_po):
+            checkBundledPO(db_po)
+            if is_valid_po(db_po):
                 pos.append(db_po)
+    
     return pos
 
 
@@ -53,13 +74,16 @@ def getReqEvents(req):
                     "Start_DTTM": req["REQ_Date"],
                     "EventType": "Creation",
                     "Text": "REQ Creation by {}".format(req["Buyer"]),
+                    "Person": req["Buyer"],
                     "Internal": False,
                     "Neutral": False,
                     "Lifecycle": "REQ"}
     # REQ Approval
     req_approval = {"ID": req["REQ_No"],
                     "Start_DTTM": req["Approved_On"],
-                    "EventType": "REQ Approval by {}".format(req["Approved_By"]),
+                    "EventType": "Approval",
+                    "Text": "REQ Approved by {}".format(req["Approved_By"]),
+                    "Person": req["Approved_By"],
                     "Internal": True,
                     "Neutral": False,
                     "Lifecycle": "REQ"}
@@ -77,6 +101,7 @@ def getPOEvents(po_arr):
                    "Start_DTTM": po["PO_Date"],
                    "EventType": "Creation",
                    "Text": "PO Creation",
+                   "Person": po["Buyer"],
                    "Internal": True,
                    "Neutral": False,
                    "Lifecycle": "PO"})
@@ -86,6 +111,7 @@ def getPOEvents(po_arr):
                        "Start_DTTM": po["PO_Approval_Date"],
                        "EventType": "Approval",
                        "Text": "PO Approved by {}".format(po["Approved_By"]),
+                       "Person": po["Approved_By"],
                        "Internal": True,
                        "Neutral": False,
                        "Lifecycle": "PO"})
@@ -93,7 +119,6 @@ def getPOEvents(po_arr):
 
 
 def getReqWorklistEvents(req_worklists):
-    pass
     results = []
     for req_wl in req_worklists:
         results.append({"ID": req_wl["Appr_Inst"],
@@ -103,27 +128,41 @@ def getReqWorklistEvents(req_worklists):
                         "Internal": "",
                         "Neutral": "",
                         "Lifecycle": ""})
-
+    return results
 
 def getPOWorklistEvents(po_worklists):
     results = []
     for po_wl in po_worklists:
-        results.append({"ID": "",
-                        "Start_DTTM": "",
-                        "EventType": "",
-                        "Text": "",
-                        "Internal": "",
-                        "Neutral": "",
-                        "Lifecycle": ""})
-    pass
+        eventtype = PO_WL_STATUS.get(po_wl["Appr_Stat"], po_wl["Appr_Stat"])
+        internal = internal_pattern.match(po_wl["Work_List"])
+        if po_wl["Appr_Stat"] == "I":
+            text = "PO Initiated."
+        else:
+            text = "{}, {}.".format(po_wl["Work_List"], po_wl["Approval_Number"])
+        results.append({"ID": po_wl["Appr_Inst"],
+                        "Start_DTTM": po_wl["Event_Date_Time"],
+                        "EventType": eventtype,
+                        "Person": po_wl["User"],
+                        "Text": text,
+                        "Internal": bool(internal),
+                        "Neutral": False,
+                        "Lifecycle": "PO"})
+    return results
 
 
 def sort_events(tlevents):
-    sorted(tlevents, key= lambda ele: ele["Start_DTTM"])
+    tlevents = sorted(tlevents, key= lambda ele: ele["Start_DTTM"])
     for i in range(len(tlevents) - 1):
         tlevents[i]["End_DTTM"] = tlevents[i+1]["Start_DTTM"]
     tlevents[-1]["End_DTTM"] = datetime.now()
 
+def write_complicated(db, reqNo, poNo, msg):
+    db.TIMELINE2.insert_one(
+        {"REQ_No": reqNo,
+         "PO_No": poNo,
+         "Complicated": msg,
+         "Business_Unit": "",
+         "events": []})
 
 if not sys.argv[1]:
     raise ValueError('Arguments Needed: Write Database: One of (dev, local).')
@@ -136,28 +175,48 @@ client = MongoClient()
 for loc in writelocation:
     dbname = 'rubix-{}-{}'.format(serverlocation, loc)
     db = client[dbname]
+    # For each REQ in the REQ DB
     for req in tqdm(db.REQ_DATA.find()):
+        # Find POs using REQ Lines, skip if multiple
         req_lines_po = set([line["PO"]["PO_Number"]
                             for line in req["lines"] if line.get("PO", None)])
         if len(req_lines_po) > 1:
-            print("REQ {} has {} POs associated with it. Did not insert these in DB.".format(
-                req["REQ_No"], len(req_lines_po)))
+            write_complicated(db, 
+                              req["REQ_No"], 
+                              "", 
+                              "[SPLITREQ] REQ {} has {} POs associated with it.".format(req["REQ_No"], len(req_lines_po)))
             continue
 
-        pos = getPOs(db, req_lines_po)
-
+        # Get POs, skip if none or none valid found
+        try:
+            pos = getPOs(db, req_lines_po)
+        except BundledPOError as e:
+            write_complicated(db,
+                              req["REQ_No"],
+                              "",
+                              e.msg)
+            continue
+        
         if not pos:
+            #print("No POs associated with REQ {} are valid. Did not insert in DB.".format(req["REQ_No"]))
             continue
 
         po_worklists = getPOWorklists(pos)
         req_worklists = req.get('worklist', [])
-        req_evnets, po_events = getReqEvents(req), getPOEvents(pos)
+        
+        req_evnets = getReqEvents(req) 
+        po_events = getPOEvents(pos)
+        
+        #req_worklist_events = getReqWorklistEvents(req_worklists)
+        po_worklist_events = getPOWorklistEvents(po_worklists)
         if len(pos) > 0:
-            timeline_events = [*req_evnets, *po_events]
+            timeline_events = [*req_evnets, *po_events, *po_worklist_events]
             sort_events(timeline_events)
-            db.TIMELINE.insert_one(
+            db.TIMELINE2.insert_one(
                 {"REQ_No": req["REQ_No"],
                  "PO_No": pos[0]["PO_No"],
+                 "Business_Unit": req["Business_Unit"],
+                 "Complicated": "",
                  "events": timeline_events})
         # print(len(req_worklists))
         # print(req_lines_po)
