@@ -2,8 +2,8 @@
 # Created by Mickey G for PLITv2 use
 # To create timeline objects from REQs and POs
 
-#print("This is WIP. Do not run just yet")
-#exit()
+print("This is WIP. Do not run just yet")
+exit()
 
 import pymongo
 from pymongo import MongoClient
@@ -12,6 +12,7 @@ from datetime import datetime
 import os
 from tqdm import tqdm
 import re
+from collections import Counter
 
 PO_STATUS_DICT = {"A": "Approved",
              "C": "Complete",
@@ -80,6 +81,7 @@ def getReqEvents(req):
                     "Person": req["Buyer"],
                     "Internal": False,
                     "Neutral": False,
+                    "Auto": False,
                     "Lifecycle": "REQ"}
     # REQ Approval
     req_approval = {"ID": req["REQ_No"],
@@ -89,6 +91,7 @@ def getReqEvents(req):
                     "Person": req["Approved_By"],
                     "Internal": True,
                     "Neutral": False,
+                    "Auto": False,
                     "Lifecycle": "REQ"}
     return [req_creation, req_approval]
 
@@ -107,6 +110,7 @@ def getPOEvents(po_arr):
                    "Person": po["Buyer"],
                    "Internal": True,
                    "Neutral": False,
+                   "Auto": False,
                    "Lifecycle": "PO"})
     # PO Approval, skip if not approved 
     if po["PO_Approval_Date"]:
@@ -117,6 +121,7 @@ def getPOEvents(po_arr):
                        "Person": po["Approved_By"],
                        "Internal": True,
                        "Neutral": False,
+                       "Auto": False,
                        "Lifecycle": "PO"})
     return result
 
@@ -128,8 +133,10 @@ def getReqWorklistEvents(req_worklists):
                         "Start_DTTM": req_wl["Denial_Date_Time"],
                         "EventType": "",
                         "Text": "",
+                        "Person": "",
                         "Internal": "",
                         "Neutral": "",
+                        "Auto": False,
                         "Lifecycle": ""})
     return results
 
@@ -148,6 +155,7 @@ def getPOWorklistEvents(po_worklists):
                         "Person": po_wl["User"],
                         "Text": text,
                         "Internal": bool(internal),
+                        "Auto": False,
                         "Neutral": False,
                         "Lifecycle": "PO"})
     return results
@@ -160,11 +168,12 @@ def sort_events(tlevents):
     tlevents[-1]["End_DTTM"] = datetime.now()
 
 def write_complicated(db, reqNo, poNo, msg):
-    db.TIMELINE2.insert_one(
+    db.TIMELINE.insert_one(
         {"REQ_No": reqNo,
          "PO_No": poNo,
          "Complicated": msg,
          "Business_Unit": "",
+         "Footnote": "",
          "events": []})
 
 if not sys.argv[1]:
@@ -183,6 +192,13 @@ for loc in writelocation:
     db = client[dbname]
     # For each REQ in the REQ DB
     for req in tqdm(db.REQ_DATA.find()):
+        footnote = ""
+        if len(req.get("worklist", [])) == 0:
+            write_complicated(db,
+                              req["REQ_No"],
+                              "",
+                              "[NoWorklist] Req {} does not have a worklist.".format(req["REQ_No"]))
+            continue
         # Find POs using REQ Lines, skip if multiple
         req_lines_po = set([line["PO"]["PO_Number"]
                             for line in req["lines"] if line.get("PO", None)])
@@ -221,11 +237,12 @@ for loc in writelocation:
         if len(pos) > 0:
             timeline_events = [*req_evnets, *po_events, *po_worklist_events]
             sort_events(timeline_events)
-            db.TIMELINE2.insert_one(
+            db.TIMELINE.insert_one(
                 {"REQ_No": req["REQ_No"],
                  "PO_No": pos[0]["PO_No"],
                  "Business_Unit": req["Business_Unit"],
                  "Complicated": "",
+                 "Footnote": footnote,
                  "events": timeline_events})
         # print(len(req_worklists))
         # print(req_lines_po)
