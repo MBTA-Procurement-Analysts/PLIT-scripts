@@ -2,8 +2,8 @@
 # Created by Mickey G for PLITv2 use
 # To create timeline objects from REQs and POs
 
-print("This is WIP. Do not run just yet")
-exit()
+#print("This is WIP. Do not run just yet")
+#exit()
 
 import pymongo
 from pymongo import MongoClient
@@ -28,6 +28,7 @@ PO_WL_STATUS = {
     "D": "Denied"
 }
 
+# Regex pattern used to determine whether a PO Timeline is internal (on ____ field)
 internal_pattern = re.compile(r".*Procurement.*", re.I)
 
 class BundledPOError(Exception):
@@ -37,7 +38,9 @@ class BundledPOError(Exception):
 
 def is_valid_po(po):
     # status is not canceled
-    # PO 'C' status is "Completer"
+    # PO 'C' status is "Completed", 'D' is "______"
+    # These statuses with an empty PO Approval Date, in general, means the
+    #   line is cancelled and the PO is marked as 'done'.
     valid_status = not (po.get("PO_Approval_Date", "") =="" and po["Status"] in {"C", "D"})
     if not valid_status:
         print("{} is not a valid PO with Approval Date of {} and Status of {}".format(po["PO_No"], po.get("PO_Approval_Date", ""), po["Status"]))
@@ -170,6 +173,9 @@ writelocation = ['dev', 'prod'] if sys.argv[1] == 'both' else [sys.argv[1]]
 
 serverlocation = os.environ['RUBIXLOCATION']
 
+if serverlocation == 'localmac':
+    serverlocation = 'local'
+
 client = MongoClient()
 
 for loc in writelocation:
@@ -198,7 +204,10 @@ for loc in writelocation:
             continue
         
         if not pos:
-            #print("No POs associated with REQ {} are valid. Did not insert in DB.".format(req["REQ_No"]))
+            write_complicated(db,
+                              req["REQ_No"],
+                              "",
+                              "No POs associated with REQ {} are valid. Did not insert in DB.".format(req["REQ_No"]))
             continue
 
         po_worklists = getPOWorklists(pos)
