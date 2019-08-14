@@ -90,7 +90,7 @@ for location in writelocation:
     
     for row in tqdm(insertionItems.itertuples()):
         db.REQ_DATA.update({"REQ_No": row.Req_ID}, {
-            '$push': {
+            '$addToSet': {
                 "lines": {
                         "Line_No": row.Line,
                         "Unit_Price": row.Base_Price,
