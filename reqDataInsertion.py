@@ -45,6 +45,10 @@ print(list(insertionItems))
 print("Removing Entries to be Updated...")
 
 print("Adding Data...")
+
+na_values = {"Address_2": ""}
+insertionItems = insertionItems.fillna(value = na_values)
+
 for location in writelocation:
     uniqueReqIDs = dict((reqno, False) for reqno in insertionItems['Req_ID'].unique().tolist())
     uniqueItemArr = insertionItems['Item'].unique().tolist()

@@ -2,8 +2,8 @@
 # Created by Mickey G for PLITv2 use
 # To create timeline objects from REQs and POs
 
-print("This is WIP. Do not run just yet")
-exit()
+#print("This is WIP. Do not run just yet")
+#exit()
 
 import pymongo
 from pymongo import MongoClient
@@ -13,6 +13,9 @@ import os
 from tqdm import tqdm
 import re
 from collections import Counter
+import pprint
+
+pp = pprint.PrettyPrinter()
 
 PO_STATUS_DICT = {"A": "Approved",
              "C": "Complete",
@@ -142,9 +145,14 @@ def getReqWorklistEvents(req_worklists):
 
 def getPOWorklistEvents(po_worklists):
     results = []
+    po_worklists = sorted(po_worklists, key=lambda k: (k["Event_Date_Time"], k["Approval_Number"]))
+    seen_timestamps = set()
+    #if len(set([ele["Event_Date_Time"] for ele in po_worklists])) != len(po_worklists):
+    #    pp.pprint(po_worklists)
     for po_wl in po_worklists:
         eventtype = PO_WL_STATUS.get(po_wl["Appr_Stat"], po_wl["Appr_Stat"])
         internal = internal_pattern.match(po_wl["Work_List"])
+        auto_event = po_wl["Event_Date_Time"] in seen_timestamps
         if po_wl["Appr_Stat"] == "I":
             text = "PO Initiated."
         else:
@@ -155,9 +163,11 @@ def getPOWorklistEvents(po_worklists):
                         "Person": po_wl["User"],
                         "Text": text,
                         "Internal": bool(internal),
-                        "Auto": False,
+                        "Auto": auto_event,
                         "Neutral": False,
                         "Lifecycle": "PO"})
+
+        seen_timestamps.add(po_wl["Event_Date_Time"])
     return results
 
 
@@ -190,6 +200,7 @@ client = MongoClient()
 for loc in writelocation:
     dbname = 'rubix-{}-{}'.format(serverlocation, loc)
     db = client[dbname]
+    db.TIMELINE.delete_many({})
     # For each REQ in the REQ DB
     for req in tqdm(db.REQ_DATA.find()):
         footnote = ""
@@ -237,6 +248,8 @@ for loc in writelocation:
         if len(pos) > 0:
             timeline_events = [*req_evnets, *po_events, *po_worklist_events]
             sort_events(timeline_events)
+            if pos[0]["PO_No"] == "7000006787":
+                pp.pprint(timeline_events)
             db.TIMELINE.insert_one(
                 {"REQ_No": req["REQ_No"],
                  "PO_No": pos[0]["PO_No"],
