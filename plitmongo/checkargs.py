@@ -1,3 +1,5 @@
+from datetime import datetime
+from plitmongo.configme import MONGO_POSSIBLE_DBTYPES
 
 def parseArgs(args):
     """Validates and parses arguments passed onto the mongo script.
@@ -16,7 +18,18 @@ def parseArgs(args):
         Arguments given unexpected: {}.\n
         Arguments Needed: Date String (mmddyyyy-hhmmss), and destination database: One of (dev, prod, both).\n
         """.format(args)
+    
     if len(args) != 2:
         raise ValueError(error_string)
 
+    datestring, dbtype = args
+
+    try:
+        datetime.strptime(datestring, "%m%d%Y-%H%M%S")
+    except ValueError:
+        raise ValueError("Date String {} is not in the correct format (mmddyyyy-hhmmss).".format(datestring))
+
+    if dbtype not in MONGO_POSSIBLE_DBTYPES:
+        raise ValueError("Database Type String {} not valid. Should be one of {}.".format(dbtype, MONGO_POSSIBLE_DBTYPES))
     
+    return (datestring, dbtype)

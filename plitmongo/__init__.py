@@ -8,10 +8,15 @@ Created by Mickey Guo in Fall 2019.
 """
 __version__ = "0.0.1"
 
-# Imports
+# Internal Imports 
+from plitmongo.checkargs import parseArgs
+from plitmongo.configme import *
+
+# External Imports
 import pandas as pd
 from pymongo import MongoClient
 import sys
 import time
 import os
 from tqdm import tqdm
+
