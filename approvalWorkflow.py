@@ -55,7 +55,7 @@ for location in writelocation:
                         "Work_List": row.Work_List if not pd.isna(row.Work_List) else "",
                         "Approval_Number": row.Approval_Number if not pd.isna(row.Approval_Number) else "",
                         "Appr_Stat": row.Appr_Stat if not pd.isna(row.Appr_Stat) else "",
-                        "Denial_Date_Time": row.Denial_Date_Time,
+                        "Event_Date_Time": row.Event_Date_Time,
                         "User": row.User,
                         "Unit": row.Unit,
                         "PO_HDR_Status": row.PO_HDR_Status,

@@ -45,6 +45,10 @@ print(list(insertionItems))
 print("Removing Entries to be Updated...")
 
 print("Adding Data...")
+
+na_values = {"Address_2": ""}
+insertionItems = insertionItems.fillna(value = na_values)
+
 for location in writelocation:
     uniqueReqIDs = dict((reqno, False) for reqno in insertionItems['Req_ID'].unique().tolist())
     uniqueItemArr = insertionItems['Item'].unique().tolist()
@@ -90,7 +94,7 @@ for location in writelocation:
     
     for row in tqdm(insertionItems.itertuples()):
         db.REQ_DATA.update({"REQ_No": row.Req_ID}, {
-            '$push': {
+            '$addToSet': {
                 "lines": {
                         "Line_No": row.Line,
                         "Unit_Price": row.Base_Price,
