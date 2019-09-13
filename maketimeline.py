@@ -204,7 +204,7 @@ for loc in writelocation:
     # For each REQ in the REQ DB
     for req in tqdm(db.REQ_DATA.find()):
         footnote = ""
-        if len(req.get("worklist", [])) == 0:
+        if False and len(req.get("worklist", [])) == 0:
             write_complicated(db,
                               req["REQ_No"],
                               "",
