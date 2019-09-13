@@ -14,8 +14,14 @@ class Lake:
         self.env = self._get_env_vars()
 
     def get_df(self, setname, queryname, datestring, basepath=""):
+        print("---- Getting Query File ----")
         if basepath == "":
+            print("Basepath not specified. Reading from Env. Variables.")
             basepath = self.env['RUBIXTAPEBASEPATH']
+        print("Date String: {}".format(datestring))
+        print("Set Name: {}".format(setname))
+        print("Query: {}".format(queryname))
+        print("-"*28)
         return self._get_df_raw_path("{0}/data/{1}/{2}/{3}-{2}.xlsx".format(basepath, setname, datestring, queryname))
 
     def _get_env_vars(self):
@@ -31,6 +37,7 @@ class Lake:
         raw_df = pd.read_excel(path, skiprows = 1)
         for old, new in PANDAS_REPLACE_TABLE:
             raw_df.columns = [c.replace(old, new) for c in raw_df.columns]
+        self._print_colnames(raw_df.columns)
         return raw_df
 
     def get_db(self, use_auth = True):
@@ -45,6 +52,12 @@ class Lake:
             return ["rubix-{}-{}".format(self.env["RUBIXLOCATION"], type_) for type_ in MONGO_ALL_DBTYPES]
         else:
             return ["rubix-{}-{}".format(self.env["RUBIXLOCATION"], dbtype)]
+
+    def _print_colnames(self, colnames_arr):
+        print("---- Column Names of Dataframe ----")
+        for colname in colnames_arr:
+            print(colname)
+        print("-----------------------------------\n")
 
     @classmethod
     def parse_args(cls, args):

@@ -22,7 +22,7 @@ data_time = datetime.now()
 for db_name in db_names:
     db = dbclient[db_name]
     for row in progressbar.progressbar(df.itertuples(), widgets=[progressbar.RotatingMarker()]):
-        res = db.MTHRPT_TIMING.update({"$and": [{"Business_Unit": row.Business_Unit}, 
+        db.MTHRPT_TIMING.update({"$and": [{"Business_Unit": row.Business_Unit}, 
                                           {"REQ_No": row.Req_ID}]}, 
                                 {'$set': {
                                     "Business_Unit": row.Business_Unit,
@@ -39,6 +39,5 @@ for db_name in db_names:
                                     "rubix_SchemaVersion": "20190910",
                                     "rubix_DataTimestamp": data_time
                                 }}, upsert=True)
-        print(res)
 
     db.LAST_UPDATED.update({'dbname': "MTHRPT_TIMING"}, {'$set': {'last_updated_time': data_time}})
