@@ -2,7 +2,9 @@ import pandas as pd
 import numpy as np
 from pymongo import MongoClient
 import os
+import sys
 from datetime import datetime
+import progressbar
 from plitmongo.configme import PANDAS_REPLACE_TABLE
 from plitmongo.configme import ENVS_TO_GET
 from plitmongo.configme import MONGO_ALL_DBTYPES
@@ -12,6 +14,7 @@ class Lake:
 
     def __init__(self):
         self.env = self._get_env_vars()
+        self.is_cron = not os.isatty(sys.stdin.fileno())
 
     def get_df(self, setname, queryname, datestring, basepath=""):
         print("---- Getting Query File ----")
