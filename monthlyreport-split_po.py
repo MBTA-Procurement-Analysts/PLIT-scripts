@@ -5,7 +5,6 @@
 import sys
 from plitmongo import Lake
 from datetime import datetime
-import progressbar
 
 lake = Lake()
 datestring, db_type = lake.parse_args(sys.argv[1:])
@@ -22,7 +21,7 @@ data_time = datetime.now()
 
 for db_name in db_names:
     db = dbclient[db_name]
-    for row in progressbar.progressbar(df.itertuples(), widgets=[progressbar.RotatingMarker()]):
+    for row in df.itertuples():
         db.MTHRPT_PO.update({'$and': [{"Business_Unit": row.Business_Unit},
                                       {"PO_No": row.PO_No}]},
                             {'$set': {

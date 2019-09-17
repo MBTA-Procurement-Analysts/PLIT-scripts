@@ -1,30 +1,50 @@
-import pandas as pd
-import numpy as np
-from pymongo import MongoClient
 import os
 import sys
+import logging
 from datetime import datetime
-import progressbar
+
+import pandas as pd
+from pymongo import MongoClient
+
 from plitmongo.configme import PANDAS_REPLACE_TABLE
 from plitmongo.configme import ENVS_TO_GET
 from plitmongo.configme import MONGO_ALL_DBTYPES
 from plitmongo.configme import MONGO_POSSIBLE_DBTYPES
 
+
 class Lake:
 
     def __init__(self):
+        self._logger_setup()
         self.env = self._get_env_vars()
         self.is_cron = not os.isatty(sys.stdin.fileno())
+        self._log("This script is {0}running from cron.".format(
+            "" if self.is_cron else "not "))
+
+    def _logger_setup(self):
+        _log_stream_handler = logging.StreamHandler()
+        _log_stream_handler.setLevel(logging.INFO)
+        _log_stream_handler.setFormatter(
+            logging.Formatter("{asctime} {levelname}: {message} ", style="{"))
+        self._logger = logging.getLogger("PLITmongo")
+        self._logger.setLevel(logging.INFO)
+        self._logger.addHandler(_log_stream_handler)
+
+    def _log(self, msg):
+        self._logger.info(msg)
+
+    def get_df_by_direct_path(self, path):
+        return self._get_df_raw_path(path)
 
     def get_df(self, setname, queryname, datestring, basepath=""):
-        print("---- Getting Query File ----")
+        self._log("---- Getting Query File ----")
         if basepath == "":
-            print("Basepath not specified. Reading from Env. Variables.")
+            self._log("Basepath not specified. Reading from Env. Variables.")
             basepath = self.env['RUBIXTAPEBASEPATH']
-        print("Date String: {}".format(datestring))
-        print("Set Name: {}".format(setname))
-        print("Query: {}".format(queryname))
-        print("-"*28)
+        self._log("Date String: {}".format(datestring))
+        self._log("Set Name: {}".format(setname))
+        self._log("Query: {}".format(queryname))
+        self._log("-"*28)
         return self._get_df_raw_path("{0}/data/{1}/{2}/{3}-{2}.xlsx".format(basepath, setname, datestring, queryname))
 
     def _get_env_vars(self):
@@ -33,20 +53,24 @@ class Lake:
             if env in os.environ:
                 res[env] = os.environ[env]
             else:
-                raise EnvironmentError("Environment Variable {} is not found on system.".format(env))
+                raise EnvironmentError(
+                    "Environment Variable {} is not found on system.".format(env))
         return res
 
     def _get_df_raw_path(self, path):
-        raw_df = pd.read_excel(path, skiprows = 1)
+        raw_df = pd.read_excel(path, skiprows=1)
         for old, new in PANDAS_REPLACE_TABLE:
             raw_df.columns = [c.replace(old, new) for c in raw_df.columns]
-        self._print_colnames(raw_df.columns)
+        self._log("Dataframe imported and column names replaced.")
+        self._log("Size of Dataframe is {}.".format(len(raw_df)))
+        self._log_colnames(raw_df.columns)
         return raw_df
 
-    def get_db(self, use_auth = True):
+    def get_db(self, use_auth=True):
         auth_string = ""
         if use_auth:
-            auth_string = "{}:{}@".format(self.env["RUBIXMONGOUSERNAME"], self.env["RUBIXMONGOPASSWORD"])
+            auth_string = "{}:{}@".format(
+                self.env["RUBIXMONGOUSERNAME"], self.env["RUBIXMONGOPASSWORD"])
         connection_string = "mongodb://{}localhost:27017".format(auth_string)
         return MongoClient(connection_string)
 
@@ -56,11 +80,11 @@ class Lake:
         else:
             return ["rubix-{}-{}".format(self.env["RUBIXLOCATION"], dbtype)]
 
-    def _print_colnames(self, colnames_arr):
-        print("---- Column Names of Dataframe ----")
+    def _log_colnames(self, colnames_arr):
+        self._log("---- Column Names of Dataframe ----")
         for colname in colnames_arr:
-            print(colname)
-        print("-----------------------------------\n")
+            self._log(colname)
+        self._log("-----------------------------------")
 
     @classmethod
     def parse_args(cls, args):
@@ -89,9 +113,11 @@ class Lake:
         try:
             datetime.strptime(datestring, "%m%d%Y-%H%M%S")
         except ValueError:
-            raise ValueError("Date String {} is not in the correct format (mmddyyyy-hhmmss).".format(datestring))
+            raise ValueError(
+                "Date String {} is not in the correct format (mmddyyyy-hhmmss).".format(datestring))
 
         if dbtype not in MONGO_POSSIBLE_DBTYPES:
-            raise ValueError("Database Type String {} not valid. Should be one of {}.".format(dbtype, MONGO_POSSIBLE_DBTYPES))
-        
+            raise ValueError("Database Type String {} not valid. Should be one of {}.".format(
+                dbtype, MONGO_POSSIBLE_DBTYPES))
+
         return (datestring, dbtype)

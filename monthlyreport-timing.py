@@ -21,7 +21,7 @@ df = df.fillna(value=na_table)
 data_time = datetime.now()
 for db_name in db_names:
     db = dbclient[db_name]
-    for row in progressbar.progressbar(df.itertuples(), widgets=[progressbar.RotatingMarker()]):
+    for row in df.itertuples():
         db.MTHRPT_TIMING.update({"$and": [{"Business_Unit": row.Business_Unit}, 
                                           {"REQ_No": row.Req_ID}]}, 
                                 {'$set': {
