@@ -65,3 +65,5 @@ for db_name in db_names:
 
     db.LAST_UPDATED.update({'dbname': "CONTRACT_PLIT_FMIS"}, {
                            '$set': {'last_updated_time': data_time}})
+
+lake.end()

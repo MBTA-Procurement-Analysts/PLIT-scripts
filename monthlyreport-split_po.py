@@ -42,3 +42,5 @@ for db_name in db_names:
                             }}, upsert=True)
 
     db.LAST_UPDATED.update({'dbname': "MTHRPT_PO"}, {'$set': {'last_updated_time': data_time}})
+
+lake.end()

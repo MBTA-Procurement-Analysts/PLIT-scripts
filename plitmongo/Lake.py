@@ -72,7 +72,8 @@ class Lake:
             auth_string = "{}:{}@".format(
                 self.env["RUBIXMONGOUSERNAME"], self.env["RUBIXMONGOPASSWORD"])
         connection_string = "mongodb://{}localhost:27017".format(auth_string)
-        return MongoClient(connection_string)
+        self.mongo_client = MongoClient(connection_string)
+        return self.mongo_client
 
     def get_db_names(self, dbtype):
         if dbtype == "both":
@@ -121,3 +122,7 @@ class Lake:
                 dbtype, MONGO_POSSIBLE_DBTYPES))
 
         return (datestring, dbtype)
+
+    def end(self):
+        self._log("Import loop complete. Closing mongoDB connection and exiting script.")
+        self.mongo_client.close()
