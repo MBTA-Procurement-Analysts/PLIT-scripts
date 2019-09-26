@@ -5,10 +5,12 @@
 # On 11/14/2018, the script was modified to accomodate the addition
 #   of 'PO Approval Date' field.
 
+# On 09/26/2019, the script was modified to accomodate the addition
+#   of 'Last_Updated' field.
+
 import pandas as pd
 import pymongo
 from pymongo import MongoClient
-from tqdm import tqdm
 import sys
 import time
 import os
@@ -48,7 +50,7 @@ for location in writelocation:
     print('Using database ' + dbname)
     db = client[dbname]
     uniquePOIDs = dict((pono, False) for pono in insertionItems['PO_No'].unique().tolist())
-    for row in tqdm(insertionItems.itertuples()):
+    for row in insertionItems.itertuples():
         if not uniquePOIDs[row.PO_No]:
             if pd.isna(row.PO_AprvDate):
                 aprvDate = ""
@@ -65,12 +67,13 @@ for location in writelocation:
                     "Approved_By": row.Approved_By,
                     "Vendor": row.Vendor_Name,
                     "PO_Approval_Date": aprvDate,
+                    "Last_Updated": row.Last_Dttm,
                     "lines": []
                 }
             }, upsert=True)
             uniquePOIDs[row.PO_No] = True
     
-    for row in tqdm(insertionItems.itertuples()):
+    for row in insertionItems.itertuples():
         db.PO_DATA.update({"PO_No": row.PO_No}, {
             '$push': {
                 "lines": {

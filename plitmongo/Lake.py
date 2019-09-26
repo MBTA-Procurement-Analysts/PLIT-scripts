@@ -18,7 +18,7 @@ class Lake:
         self._logger_setup()
         self.env = self._get_env_vars()
         self.is_cron = not os.isatty(sys.stdin.fileno())
-        self._log("This script is {0}running from cron.".format(
+        self._log("This script is {0}running from cron/jupyter.".format(
             "" if self.is_cron else "not "))
 
     def _logger_setup(self):
