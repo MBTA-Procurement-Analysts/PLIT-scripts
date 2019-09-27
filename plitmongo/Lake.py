@@ -33,6 +33,9 @@ class Lake:
     def _log(self, msg):
         self._logger.info(msg)
 
+    def _warn(self, msg):
+        self._logger.warn(msg)
+
     def get_df_by_direct_path(self, path):
         return self._get_df_raw_path(path)
 
@@ -110,12 +113,6 @@ class Lake:
             raise ValueError(error_string)
 
         datestring, dbtype = args
-
-        try:
-            datetime.strptime(datestring, "%m%d%Y-%H%M%S")
-        except ValueError:
-            raise ValueError(
-                "Date String {} is not in the correct format (mmddyyyy-hhmmss).".format(datestring))
 
         if dbtype not in MONGO_POSSIBLE_DBTYPES:
             raise ValueError("Database Type String {} not valid. Should be one of {}.".format(

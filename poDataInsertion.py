@@ -8,6 +8,9 @@
 # On 09/26/2019, the script was modified to accomodate the addition
 #   of 'Last_Updated' field.
 
+# On 09/27/2019, the script was modified to acoomodate the addition
+#   of 'Vendor_ID' field.
+
 import pandas as pd
 import pymongo
 from pymongo import MongoClient
@@ -68,6 +71,7 @@ for location in writelocation:
                     "Vendor": row.Vendor_Name,
                     "PO_Approval_Date": aprvDate,
                     "Last_Updated": row.Last_Dttm,
+                    "Vendor_ID": row.Vendor,
                     "lines": []
                 }
             }, upsert=True)
