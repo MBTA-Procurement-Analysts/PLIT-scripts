@@ -42,7 +42,7 @@ class BundledPOError(Exception):
 
 def is_valid_po(po):
     # status is not canceled
-    # PO 'C' status is "Completed", 'D' is "______"
+    # PO 'C' status is "Completed", 'D' is "Dispatched"
     # These statuses with an empty PO Approval Date, in general, means the
     #   line is cancelled and the PO is marked as 'done'.
     valid_status = not (po.get("PO_Approval_Date", "") =="" and po["Status"] in {"C", "D"})
@@ -59,6 +59,7 @@ def checkBundledPO(po):
 def getPOs(dbclient, req_lines_po_set):
     pos = []
     for po_num in req_lines_po:
+        print(po_num)
         for db_po in db.PO_DATA.find({"$and": [{"PO_No": po_num},
                                                {"Business_Unit": req["Business_Unit"]}]}):
             checkBundledPO(db_po)
@@ -211,6 +212,7 @@ for loc in writelocation:
                               "[NoWorklist] Req {} does not have a worklist.".format(req["REQ_No"]))
             continue
         # Find POs using REQ Lines, skip if multiple
+        print(req["REQ_No"])
         req_lines_po = set([line["PO"]["PO_Number"]
                             for line in req["lines"] if line.get("PO", None)])
         if len(req_lines_po) > 1:
@@ -248,8 +250,6 @@ for loc in writelocation:
         if len(pos) > 0:
             timeline_events = [*req_evnets, *po_events, *po_worklist_events]
             sort_events(timeline_events)
-            if pos[0]["PO_No"] == "7000006787":
-                pp.pprint(timeline_events)
             db.TIMELINE.insert_one(
                 {"REQ_No": req["REQ_No"],
                  "PO_No": pos[0]["PO_No"],
