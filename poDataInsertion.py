@@ -11,6 +11,10 @@
 # On 09/27/2019, the script was modified to acoomodate the addition
 #   of 'Vendor_ID' field.
 
+# On 10/09/2019, the script was modified to use the new query name of
+#   `PLIT_PO_6`, as well as steps to replace potential N/As in the REQ ID/Line
+#   fields since the join is now left outer join.
+
 import pandas as pd
 import pymongo
 from pymongo import MongoClient
@@ -34,7 +38,7 @@ elif serverlocation == 'ohio':
 else:
     raise EnvironmentError('Environment Variable "RUBIXLOCATION" seems not to be set.')
 
-filepath = filepathprefix + "po6/" + date + "/NO_RUBIX_PO_V2_6-" + date + ".xlsx" 
+filepath = filepathprefix + "po6/" + date + "/PLIT_PO_6-" + date + ".xlsx" 
 
 print("--- Reading " + filepath + " ---")
 
@@ -44,6 +48,11 @@ client = MongoClient()
 insertionItems.columns = [c.replace(' ', '_') for c in insertionItems.columns]
 insertionItems.columns = [c.replace('/', '_') for c in insertionItems.columns]
 insertionItems.columns = [c.replace('.', '') for c in insertionItems.columns]
+
+# lines.Requisition_Data NA handling
+na_table = {"Req_ID": "", "REQ_Line": 0}
+
+insertionItems.fillna(value=na_table)
 
 print("--- Pushing Data to mongo ---")
 
