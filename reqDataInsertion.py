@@ -26,7 +26,7 @@ elif serverlocation == 'ohio':
 else:
     raise EnvironmentError('Environment Variable "RUBIXLOCATION" seems not to be set.')
 
-filepath = filepathprefix + "paperboy6/" + date + "/NO_PAPERBOY_V3_6Mo-" + date + ".xlsx"
+filepath = filepathprefix + "req-6/" + date + "/PLIT_REQ_6-" + date + ".xlsx"
 
 print("--- Reading " + filepath + " ---")
 
