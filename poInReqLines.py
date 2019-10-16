@@ -27,7 +27,7 @@ else:
         'Environment Variable "RUBIXLOCATION" seems not to be set.')
 
 filepath = filepathprefix + "req_line_po_line/" + \
-    date + "/SLT_REQ_LN_PO_LN-" + date + ".xlsx"
+    date + "/PLIT_REQ_LINE_PO_LINE-" + date + ".xlsx"
 
 print("--- Reading " + filepath + " ---")
 
