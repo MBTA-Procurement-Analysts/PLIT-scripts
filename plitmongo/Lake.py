@@ -80,9 +80,14 @@ class Lake:
 
     def get_db_names(self, dbtype):
         if dbtype == "both":
-            return ["rubix-{}-{}".format(self.env["RUBIXLOCATION"], type_) for type_ in MONGO_ALL_DBTYPES]
+            res = ["rubix-{}-{}".format(self.env["RUBIXLOCATION"], type_) for type_ in MONGO_ALL_DBTYPES]
         else:
-            return ["rubix-{}-{}".format(self.env["RUBIXLOCATION"], dbtype)]
+            res = ["rubix-{}-{}".format(self.env["RUBIXLOCATION"], dbtype)]
+        self._log("---- Database to Work on ----")
+        for name in res:
+            self._log(name)
+        self._log("-----------------------------")
+        return res
 
     def _log_colnames(self, colnames_arr):
         self._log("---- Column Names of Dataframe ----")
