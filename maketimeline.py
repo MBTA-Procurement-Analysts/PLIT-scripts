@@ -52,8 +52,7 @@ def is_valid_po(po):
     # PO 'C' status is "Completed", 'D' is "Dispatched"
     # These statuses with an empty PO Approval Date, in general, means the
     #   line is cancelled and the PO is marked as 'done'.
-    valid_status = not (po.get("PO_Approval_Date", "") ==
-                        "" and po["Status"] in {"C", "D"})
+    valid_status = not (po.get("PO_Approval_Date", "") == "" and po["Status"] in {"C", "D"})
     if not valid_status:
         print("{} is not a valid PO with Approval Date of {} and Status of {}".format(
             po["PO_No"], po.get("PO_Approval_Date", ""), po["Status"]))
@@ -130,7 +129,7 @@ def getPOEvents(po_arr):
                    "Auto": False,
                    "Lifecycle": "PO"})
     # PO Approval, skip if not approved
-    if po["PO_Approval_Date"]:
+    if po.get("PO_Approval_Date", None):
         result.append({"ID": po["PO_No"],
                        "Start_DTTM": po["PO_Approval_Date"],
                        "EventType": "Approval",
@@ -158,7 +157,7 @@ def getReqWorklistEvents(req_worklists):
         else:
             text = "{}, {}".format(
                 req_wl["Work_List"], req_wl["Approval_Number"])
-        results.append({"ID": req_wl["Appr_Inst"],
+        results.append({"ID": "REQWF-" + str(req_wl["Appr_Inst"]),
                         "Start_DTTM": req_wl["Date_Time"],
                         "EventType": "",
                         "Text": text,
@@ -186,7 +185,7 @@ def getPOWorklistEvents(po_worklists):
         else:
             text = "{}, {}.".format(
                 po_wl["Work_List"], po_wl["Approval_Number"])
-        results.append({"ID": po_wl["Appr_Inst"],
+        results.append({"ID": "POWF-" + str(po_wl["Appr_Inst"]),
                         "Start_DTTM": po_wl["Event_Date_Time"],
                         "EventType": eventtype,
                         "Person": po_wl["User"],
