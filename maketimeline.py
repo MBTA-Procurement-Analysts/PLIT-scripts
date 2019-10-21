@@ -165,7 +165,7 @@ def getReqWorklistEvents(req_worklists):
                         "Internal": "",
                         "Neutral": "",
                         "Auto": False,
-                        "Lifecycle": "REQ"})
+                        "Lifecycle": "REQ_APPROVE_WF"})
     return results
 
 
@@ -193,7 +193,7 @@ def getPOWorklistEvents(po_worklists):
                         "Internal": bool(internal),
                         "Auto": auto_event,
                         "Neutral": False,
-                        "Lifecycle": "PO"})
+                        "Lifecycle": "PO_APPROVE_WF"})
 
         seen_timestamps.add(po_wl["Event_Date_Time"])
     return results
@@ -217,7 +217,7 @@ def getReqHoldEvents(req_id, req_hold_arr):
                             "Text": "Hold for ({}) ({}). Released. Duration is {} days.".format(hold_line["Hold_Type"], hold_line["Hold_Comment"], hold_line["Hold_Duration"]),
                             "Internal": True,
                             "Neutral": False,
-                            "Lifecycle": "REQ"})
+                            "Lifecycle": "REQ_HOLD"})
     return results
 
 def sort_events(tlevents):
@@ -290,11 +290,12 @@ for loc in writelocation:
             continue
 
         if not pos:
-            write_complicated(db,
-                              req["REQ_No"],
-                              "",
-                              "[NoValidPO] No POs associated with REQ {} are valid. Did not insert in DB.".format(req["REQ_No"]))
-            continue
+            footnote += "This REQ does not have POs associated with it. "
+            # write_complicated(db,
+            #                   req["REQ_No"],
+            #                   "",
+            #                   "[NoValidPO] No POs associated with REQ {} are valid. Did not insert in DB.".format(req["REQ_No"]))
+            # continue
 
         # REQ On Hold Status
         req_hold_events = getReqHoldEvents(req["REQ_No"], req.get("Holds", []))
@@ -306,13 +307,13 @@ for loc in writelocation:
 
         req_worklist_events = getReqWorklistEvents(req_worklists)
         po_worklist_events = getPOWorklistEvents(po_worklists)
-        if len(pos) > 0:
+        if True:
             timeline_events = [*req_evnets, *po_events,
                                *req_worklist_events, *po_worklist_events, *req_hold_events]
             timeline_events = sort_events(timeline_events)
             db.TIMELINE.insert_one(
                 {"REQ_No": req["REQ_No"],
-                 "PO_No": pos[0]["PO_No"],
+                 "PO_No": pos[0]["PO_No"] if len(pos) != 0 else "",
                  "Business_Unit": req["Business_Unit"],
                  "Complicated": "",
                  "Footnote": footnote,
