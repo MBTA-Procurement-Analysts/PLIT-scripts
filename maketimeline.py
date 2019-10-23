@@ -321,3 +321,6 @@ for loc in writelocation:
         # print(len(req_worklists))
         # print(req_lines_po)
         # db.TIMELINE.insert_one(req)
+    for po in tqdm(db.PO_DATA.find()):
+        if db.TIMELINE.find({"PO_No": po["PO_No"]}).count() == 0:
+            print(po["PO_No"])

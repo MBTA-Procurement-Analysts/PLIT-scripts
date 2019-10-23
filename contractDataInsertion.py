@@ -29,7 +29,7 @@ elif serverlocation == 'ohio':
 else:
     raise EnvironmentError('Environment Variable "RUBIXLOCATION" seems not to be set.')
 
-filepath = filepathprefix + "contract/" + date + "/CONTRACT-" + date + ".xlsx"
+filepath = filepathprefix + "contract/" + date + "/NO_CONTRACT_RUBIX-" + date + ".xlsx"
 
 print("--- Reading " + filepath + " ---")
 
