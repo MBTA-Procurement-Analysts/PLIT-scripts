@@ -29,7 +29,7 @@ elif serverlocation == 'ohio':
 else:
     raise EnvironmentError('Environment Variable "RUBIXLOCATION" seems not to be set.')
 
-filepath = filepathprefix + "earlyWarning/" + date + "/SLT_CPTL_EARLYWARNING-" + date + ".xlsx" 
+filepath = filepathprefix + "early_warning/" + date + "/SLT_CPTL_EARLYWARNING-" + date + ".xlsx" 
 
 print("--- Reading " + filepath + " ---")
 
