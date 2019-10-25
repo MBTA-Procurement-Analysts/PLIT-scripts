@@ -15,6 +15,9 @@
 #   `PLIT_PO_6`, as well as steps to replace potential N/As in the REQ ID/Line
 #   fields since the join is now left outer join.
 
+# On 10/25/2019, the script was modified to use the new data path of
+#   `po-6` instead of `po6`.
+
 import pandas as pd
 import pymongo
 from pymongo import MongoClient
@@ -38,7 +41,7 @@ elif serverlocation == 'ohio':
 else:
     raise EnvironmentError('Environment Variable "RUBIXLOCATION" seems not to be set.')
 
-filepath = filepathprefix + "po6/" + date + "/PLIT_PO_6-" + date + ".xlsx" 
+filepath = filepathprefix + "po-6/" + date + "/PLIT_PO_6-" + date + ".xlsx" 
 
 print("--- Reading " + filepath + " ---")
 
