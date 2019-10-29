@@ -23,7 +23,8 @@ for db_name in db_names:
     db = dbclient[db_name]
     for row in df.itertuples():
         db.MTHRPT_TIMING.update({"$and": [{"Business_Unit": row.Business_Unit}, 
-                                          {"REQ_No": row.Req_ID}]}, 
+                                          {"REQ_No": row.Req_ID},
+                                          {"PO_No": row.PO_No}]}, 
                                 {'$set': {
                                     "Business_Unit": row.Business_Unit,
                                     "REQ_No": row.Req_ID,
