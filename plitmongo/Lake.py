@@ -25,7 +25,7 @@ class Lake:
         _log_stream_handler = logging.StreamHandler()
         _log_stream_handler.setLevel(logging.INFO)
         _log_stream_handler.setFormatter(
-            logging.Formatter("{asctime} {levelname}: {message} ", style="{"))
+                logging.Formatter("\033[104mMONGOSCRIPT\033[49m: {asctime} {levelname}: {message}", datefmt="%Y-%m-%d %a %H:%M:%S", style="{"))
         self._logger = logging.getLogger("PLITmongo")
         self._logger.setLevel(logging.INFO)
         self._logger.addHandler(_log_stream_handler)
@@ -39,16 +39,16 @@ class Lake:
     def get_df_by_direct_path(self, path):
         return self._get_df_raw_path(path)
 
-    def get_df(self, setname, queryname, datestring, basepath=""):
+    def get_df(self, setname, queryname, datestring, databasepath=""):
         self._log("---- Getting Query File ----")
-        if basepath == "":
-            self._log("Basepath not specified. Reading from Env. Variables.")
-            basepath = self.env['RUBIXTAPEBASEPATH']
+        if databasepath == "":
+            self._log(" Data Basepath not specified. Reading from Env. Variables.")
+            databasepath = self.env['RUBIXTAPEDATAPATH']
         self._log("Date String: {}".format(datestring))
         self._log("Set Name: {}".format(setname))
         self._log("Query: {}".format(queryname))
         self._log("-"*28)
-        return self._get_df_raw_path("{0}/data/{1}/{2}/{3}-{2}.xlsx".format(basepath, setname, datestring, queryname))
+        return self._get_df_raw_path("{0}/{1}/{2}/{3}-{2}.xlsx".format(databasepath, setname, datestring, queryname))
 
     def _get_env_vars(self):
         res = {}

@@ -17,4 +17,6 @@ PANDAS_REPLACE_TABLE = [(" ", "_"),
 ENVS_TO_GET = ['RUBIXMONGOUSERNAME', 
                'RUBIXMONGOPASSWORD', 
                'RUBIXLOCATION', 
-               'RUBIXTAPEBASEPATH']
+               'RUBIXTAPEBASEPATH',
+               'RUBIXTAPEDATAPATH',
+               'RUBIXTAPESCRIPTPATH']
