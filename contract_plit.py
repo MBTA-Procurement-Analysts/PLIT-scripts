@@ -9,7 +9,7 @@ import time
 
 lake = Lake()
 datestring, db_type = lake.parse_args(sys.argv[1:])
-dbclient = lake.get_db(use_auth=False)
+db_client = lake.get_db(use_auth=False)
 df = lake.get_df("contract_plit", "JLYU_CONTRACT_PUBLIC", datestring)
 db_names = lake.get_db_names(db_type)
 
@@ -38,7 +38,7 @@ df = df.fillna(value=na_table)
 data_time = datetime.now()
 
 for db_name in db_names:
-    db = dbclient[db_name]
+    db = db_client[db_name]
     for row in df.itertuples():
         db.CONTRACT_PLIT_FMIS.update({"CONTRACT_No": row.Contract},
                                      {'$set': {

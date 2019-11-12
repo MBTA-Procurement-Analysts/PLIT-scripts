@@ -8,7 +8,7 @@ from datetime import datetime
 
 lake = Lake()
 datestring, db_type = lake.parse_args(sys.argv[1:])
-dbclient = lake.get_db(use_auth=False)
+db_client = lake.get_db(use_auth=False)
 df = lake.get_df("split_po", "NG_NO_SPILT_PO_SIDE", datestring)
 db_names = lake.get_db_names(db_type)
 
@@ -20,7 +20,7 @@ df = df.fillna(value=na_table)
 data_time = datetime.now()
 
 for db_name in db_names:
-    db = dbclient[db_name]
+    db = db_client[db_name]
     for row in df.itertuples():
         db.MTHRPT_PO.update({'$and': [{"Business_Unit": row.Business_Unit},
                                       {"PO_No": row.PO_No}]},
@@ -41,6 +41,8 @@ for db_name in db_names:
                                 "rubix_DataTimestamp": data_time
                             }}, upsert=True)
 
-    db.LAST_UPDATED.update({'dbname': "MTHRPT_PO"}, {'$set': {'last_updated_time': data_time}})
+    db.LAST_UPDATED.update({'dbname': "MTHRPT_PO"},
+                           {'$set': {'last_updated_time': data_time}},
+                           upsert=True)
 
 lake.end()

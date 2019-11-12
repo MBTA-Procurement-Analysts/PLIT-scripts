@@ -2,60 +2,46 @@
 # Created by Nate O, modified by Mickey G for Project flextape use
 # To Import Req data to mongodb, within the flextape pipeline
 
-import pandas as pd
-import pymongo
-from pymongo import MongoClient
-from tqdm import tqdm
 import sys
 import time
-import os
+from datetime import datetime
+import pandas as pd
+from plitmongo import Lake
 
-print("reqDataInsertion.py taking over...")
+lake = Lake()
+datestring, db_type = lake.parse_args(sys.argv[1:])
+db_client = lake.get_db(use_auth=False)
+df = lake.get_df("req-6", "PLIT_REQ_6", datestring)
+db_names = lake.get_db_names(db_type)
 
-if not sys.argv[1] and not sys.argv[2]:
-    raise ValueError('Arguments Needed: Date String (mmddyyyy-hhmmss), Write Location: One of (dev, prod, both)')
-date = sys.argv[1]
-writelocation = ['dev', 'prod'] if sys.argv[2] == 'both' else [sys.argv[2]]
+# TOTEST
 
-serverlocation = os.environ['RUBIXLOCATION']
+# It is possible for a REQ to have no Buyer associated with it.
+# One such case is that when a REQ was "federalized" (i.e. change of biz unit)
+# The original REQ will lose it's Requester and Buyer, making these fields NAs
+#   in Pandas, and thus `NaN`s in mongodb.
+na_table = {"Due": datetime(2001, 1, 1, 0, 0, 0),
+            "Origin": "",
+            "By": "",
+            "Name": "",
+            "More_Info": "",
+            "Mfg_ID": "",
+            "Address_1": "",
+            "Address_2": "",
+            "City": "",
+            "St": "",
+            "Postal": "",
+            "Item": "",
+            "Buyer": "",
+            "Requester": ""}
+df = df.fillna(value=na_table)
 
-if serverlocation == 'local':
-    filepathprefix = "/home/rubix/Desktop/Project-Ducttape/data/"
-elif serverlocation == 'ohio':
-    filepathprefix = "/home/ubuntu/Projects/flextape/"
-else:
-    raise EnvironmentError('Environment Variable "RUBIXLOCATION" seems not to be set.')
-
-filepath = filepathprefix + "req-6/" + date + "/PLIT_REQ_6-" + date + ".xlsx"
-
-print("--- Reading " + filepath + " ---")
-
-insertionItems = pd.read_excel(filepath, skiprows = 1)
-insertionItems['Due'] = insertionItems['Due'].fillna(pd.Timestamp('2001-01-01 00:00:00'))
-
-client = MongoClient()
-insertionItems.columns = [c.replace(' ', '_') for c in insertionItems.columns]
-insertionItems.columns = [c.replace('/', '_') for c in insertionItems.columns]
-
-print("--- Pushing Data to mongo ---")
-
-print(list(insertionItems))
-
-
-print("Removing Entries to be Updated...")
-
-print("Adding Data...")
-
-na_values = {"Address_2": ""}
-insertionItems = insertionItems.fillna(value = na_values)
-
-for location in writelocation:
-    uniqueReqIDs = dict((reqno, False) for reqno in insertionItems['Req_ID'].unique().tolist())
-    uniqueItemArr = insertionItems['Item'].unique().tolist()
-    dbname = 'rubix-' + serverlocation + '-' + location 
-    print('Using database ' + dbname)
-    db = client[dbname]
-    for row in tqdm(insertionItems.itertuples()):
+for db_name in db_names:
+    uniqueReqIDs = dict((reqno, False)
+                        for reqno in df['Req_ID'].unique().tolist())
+    uniqueItemArr = df['Item'].unique().tolist()
+    db = db_client[db_name]
+    for row in df.itertuples():
         if not uniqueReqIDs[row.Req_ID]:
             db.REQ_DATA.update({'REQ_No': row.Req_ID}, {
                 '$set': {
@@ -63,8 +49,8 @@ for location in writelocation:
                     'Account': row.Account,
                     'Business_Unit': row.Unit,
                     'Buyer': row.Buyer,
-                    'Currency' : row.Currency,
-                    'Department' : {
+                    'Currency': row.Currency,
+                    'Department': {
                         "Number": row.Dept_Loc
                     },
                     "Fund": row.Fund,
@@ -77,40 +63,38 @@ for location in writelocation:
                         "Address_2": row.Address_2,
                         "City": row.City,
                         "State": row.St,
-                        "Zip_Code": row.Postal,
+                        "Zip_Code": "{:0>5}".format(row.Postal),
                         "Country": row.Cntry
                     },
                     "Status": row.Status,
-                    "Approved_By" : row.By,
+                    "Approved_By": row.By,
                     "Approved_On": row.Date,
                     "Vendor": {
                         "Number": row.Vendor,
                         "Name": row.Name
                     },
                     "lines": []
-            }
-            }, upsert = True)
+                }
+            }, upsert=True)
             uniqueReqIDs[row.Req_ID] = True
-    
-    for row in tqdm(insertionItems.itertuples()):
+
+    for row in df.itertuples():
         db.REQ_DATA.update({"REQ_No": row.Req_ID}, {
             '$addToSet': {
                 "lines": {
-                        "Line_No": row.Line,
-                        "Unit_Price": row.Base_Price,
-                        "Line_Total": row.Amount,
-                        "Schedule_No": row.Sched_Num,
-                        "Quantity": row.Req_Qty,
-                        "Due_Date": row.Due,
-                        "More_Info": row.More_Info,
-                        "UOM": row.UOM,
-                        "Item": row.Item
-                    }
+                    "Line_No": row.Line,
+                    "Unit_Price": row.Base_Price,
+                    "Line_Total": row.Amount,
+                    "Schedule_No": row.Sched_Num,
+                    "Quantity": row.Req_Qty,
+                    "Due_Date": row.Due,
+                    "More_Info": row.More_Info,
+                    "UOM": row.UOM,
+                    "Item": row.Item
+                }
             }})
-        # db.REQ_DATA.find({"lines": {$elemMatch: {"Item": "02545903"}}})
-    
-    db.LAST_UPDATED.update({'dbname': "REQ_DATA"}, {'$set': {'last_updated_time': time.time()}})
-    
-    
-    print("Req Update Done!")
 
+    db.LAST_UPDATED.update({'dbname': "REQ_DATA"}, {
+                           '$set': {'last_updated_time': time.time()}}, upsert=True)
+
+lake.end()

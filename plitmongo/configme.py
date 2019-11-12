@@ -12,11 +12,12 @@ MONGO_ALL_DBTYPES = ['dev', 'prod']
 PANDAS_REPLACE_TABLE = [(" ", "_"),
                         ("/", "_"),
                         (".", ""),
-                        ("?", "")]
+                        ("?", ""),
+                        ("-", "_")]
 
-ENVS_TO_GET = ['RUBIXMONGOUSERNAME', 
-               'RUBIXMONGOPASSWORD', 
-               'RUBIXLOCATION', 
+ENVS_TO_GET = ['RUBIXMONGOUSERNAME',
+               'RUBIXMONGOPASSWORD',
+               'RUBIXLOCATION',
                'RUBIXTAPEBASEPATH',
                'RUBIXTAPEDATAPATH',
                'RUBIXTAPESCRIPTPATH']

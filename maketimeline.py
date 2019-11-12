@@ -52,7 +52,8 @@ def is_valid_po(po):
     # PO 'C' status is "Completed", 'D' is "Dispatched"
     # These statuses with an empty PO Approval Date, in general, means the
     #   line is cancelled and the PO is marked as 'done'.
-    valid_status = not (po.get("PO_Approval_Date", "") == "" and po["Status"] in {"C", "D"})
+    valid_status = not (po.get("PO_Approval_Date", "") ==
+                        "" and po["Status"] in {"C", "D"})
     if not valid_status:
         print("{} is not a valid PO with Approval Date of {} and Status of {}".format(
             po["PO_No"], po.get("PO_Approval_Date", ""), po["Status"]))
@@ -70,7 +71,7 @@ def checkBundledPO(po):
             "{} REQs found with {}.".format(len(reqs), po["PO_No"]))
 
 
-def getPOs(dbclient, req_lines_po_set):
+def getPOs(db_client, req_lines_po_set):
     pos = []
     for po_num in req_lines_po:
         for db_po in db.PO_DATA.find({"$and": [{"PO_No": po_num},
@@ -219,6 +220,7 @@ def getReqHoldEvents(req_id, req_hold_arr):
                             "Neutral": False,
                             "Lifecycle": "REQ_HOLD"})
     return results
+
 
 def sort_events(tlevents):
     return sorted(tlevents, key=lambda ele: ele["Start_DTTM"])

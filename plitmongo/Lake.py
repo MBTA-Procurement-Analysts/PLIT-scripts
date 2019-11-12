@@ -15,8 +15,8 @@ from plitmongo.configme import MONGO_POSSIBLE_DBTYPES
 class Lake:
 
     def __init__(self):
-        self._logger_setup()
         self.env = self._get_env_vars()
+        self._logger_setup()
         self.is_cron = not os.isatty(sys.stdin.fileno())
         self._log("This script is {0}running from cron/jupyter.".format(
             "" if self.is_cron else "not "))
@@ -24,8 +24,12 @@ class Lake:
     def _logger_setup(self):
         _log_stream_handler = logging.StreamHandler()
         _log_stream_handler.setLevel(logging.INFO)
+        prefix_string = "\033[104mMONGOSCRIPT {}\033[49m: ".format(
+            self.env["RUBIXLOCATION"].upper())
         _log_stream_handler.setFormatter(
-                logging.Formatter("\033[104mMONGOSCRIPT\033[49m: {asctime} {levelname}: {message}", datefmt="%Y-%m-%d %a %H:%M:%S", style="{"))
+            logging.Formatter(prefix_string + "{asctime} {levelname}: {message}",
+                              datefmt="%Y-%m-%d %a %H:%M:%S",
+                              style="{"))
         self._logger = logging.getLogger("PLITmongo")
         self._logger.setLevel(logging.INFO)
         self._logger.addHandler(_log_stream_handler)
@@ -42,7 +46,7 @@ class Lake:
     def get_df(self, setname, queryname, datestring, databasepath=""):
         self._log("---- Getting Query File ----")
         if databasepath == "":
-            self._log(" Data Basepath not specified. Reading from Env. Variables.")
+            self._log("Data Basepath not specified. Reading from Env. Variables.")
             databasepath = self.env['RUBIXTAPEDATAPATH']
         self._log("Date String: {}".format(datestring))
         self._log("Set Name: {}".format(setname))
@@ -65,7 +69,8 @@ class Lake:
         for old, new in PANDAS_REPLACE_TABLE:
             raw_df.columns = [c.replace(old, new) for c in raw_df.columns]
         self._log("Dataframe imported and column names replaced.")
-        self._log("Size of Dataframe is {}.".format(len(raw_df)))
+        self._log(
+            "Size of Dataframe is \033[1;46m{}\033[0;49m.".format(len(raw_df)))
         self._log_colnames(raw_df.columns)
         return raw_df
 
@@ -80,7 +85,8 @@ class Lake:
 
     def get_db_names(self, dbtype):
         if dbtype == "both":
-            res = ["rubix-{}-{}".format(self.env["RUBIXLOCATION"], type_) for type_ in MONGO_ALL_DBTYPES]
+            res = ["rubix-{}-{}".format(self.env["RUBIXLOCATION"], type_)
+                   for type_ in MONGO_ALL_DBTYPES]
         else:
             res = ["rubix-{}-{}".format(self.env["RUBIXLOCATION"], dbtype)]
         self._log("---- Database to Work on ----")
@@ -126,5 +132,6 @@ class Lake:
         return (datestring, dbtype)
 
     def end(self):
-        self._log("Import loop complete. Closing mongoDB connection and exiting script.")
+        self._log(
+            "Import loop complete. Closing mongoDB connection and exiting script.")
         self.mongo_client.close()

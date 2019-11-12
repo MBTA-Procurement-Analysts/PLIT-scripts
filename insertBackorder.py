@@ -2,63 +2,33 @@
 # Created by Nate O, modified by Mickey G for Project flextape use
 # To Import Item backorder metadata to mongodb, within the flextape pipeline
 
-import pandas as pd
-import pymongo
-from pymongo import MongoClient
-from tqdm import tqdm
 import sys
 import time
-import os
+import pandas as pd
+from plitmongo import Lake
 
-if not sys.argv[1] and not sys.argv[2]:
-    raise ValueError('Arguments Needed: Date String (mmddyyyy-hhmmss), Write Location: One of (dev, prod, both)')
-date = sys.argv[1]
-writelocation = ['dev', 'prod'] if sys.argv[2] == 'both' else [sys.argv[2]]
+lake = Lake()
+datestring, db_type = lake.parse_args(sys.argv[1:])
+db_client = lake.get_db(use_auth=False)
+df = lake.get_df("itembackorder", "ITEM-BACKORDER", datestring)
+db_names = lake.get_db_names(db_type)
 
-serverlocation = os.environ['RUBIXLOCATION']
-
-if serverlocation == 'local':
-    filepathprefix = "/home/rubix/Desktop/Project-Ducttape/data/"
-elif serverlocation == 'ohio':
-    filepathprefix = "/home/ubuntu/Projects/flextape/"
-else:
-    raise EnvironmentError('Environment Variable "RUBIXLOCATION" seems not to be set.')
-
-filepath = filepathprefix + "itembackorder/" + date + "/ITEM-BACKORDER-" + date + ".xlsx"
-
-print("--- Reading " + filepath + " ---")
-
-# Reads Excel File
-# Type of ItemID has to be specified since Pandas will think columns 
-#   without alphabets are ints
-insertionItems = pd.read_excel(filepath, skiprows = 1, dtype = {'Item': str})
-
-# Strips Item ID whitespaces
-insertionItems['Item'] = insertionItems['Item'].str.strip()
-
-# Fills spaces in Column names with underscores
-insertionItems.columns = [c.replace(' ', '_') for c in insertionItems.columns]
-
-# Initiates Mongodb connection
-client = MongoClient()
-
-print("Adding Data...")
-
-
-for location in writelocation:
-    dbname = 'rubix-' + serverlocation + '-' + location 
-    print('Using database ' + dbname)
-    db = client[dbname]
+for db_name in db_names:
+    db = db_client[db_name]
     # Resets all Backorder Amount that != 0 to 0, since the original query will
-    #   not include 0-amount entries; thus if the amount goes to 0 there is no 
+    #   not include 0-amount entries; thus if the amount goes to 0 there is no
     #   entry in the query.
     # Multi Flag set as true to cover all Entries
-    db.ITEM_DATA.update({'Total_Backorder': {'$ne': 0}}, {'$set' : {'Total_Backorder': 0}}, multi = True)
+    db.ITEM_DATA.update({'Total_Backorder': {'$ne': 0}},
+                        {'$set': {'Total_Backorder': 0}}, multi=True)
 
-    for row in tqdm(insertionItems.itertuples()):
-        db.ITEM_DATA.update({'Item_No': row.Item}, 
-                {'$set': 
-                    {'Total_Backorder': row.Qty_Req}}) 
-    
-    db.LAST_UPDATED.update({'dbname': "ITEM_DATA"}, {'$set': {'last_updated_time': time.time()}})
-    #db.REQ_DATA.find({"lines": {$elemMatch: {"Item": "02545903"}}})
+    for row in df.itertuples():
+        db.ITEM_DATA.update({'Item_No': row.Item},
+                            {'$set':
+                             {'Total_Backorder': row.Qty_Req}})
+
+    db.LAST_UPDATED.update({'dbname': "ITEM_DATA"},
+                           {'$set': {'last_updated_time': time.time()}},
+                           upsert=True)
+
+lake.end()

@@ -18,27 +18,54 @@
 # On 10/25/2019, the script was modified to use the new data path of
 #   `po-6` instead of `po6`.
 
+import pandas as pd
+import pymongo
+from pymongo import MongoClient
 import sys
 import time
-import pandas as pd
-from plitmongo import Lake
+import os
 
-lake = Lake()
-datestring, db_type = lake.parse_args(sys.argv[1:])
-db_client = lake.get_db(use_auth=False)
-df = lake.get_df("po-6", "PLIT_PO_6", datestring)
-db_names = lake.get_db_names(db_type)
+print("poDataInsertion.py taking over...")
+
+if not sys.argv[1] and not sys.argv[2]:
+    raise ValueError('Arguments Needed: Date String (mmddyyyy-hhmmss), Write Location: One of (dev, prod, both)')
+date = sys.argv[1]
+writelocation = ['dev', 'prod'] if sys.argv[2] == 'both' else [sys.argv[2]]
+
+serverlocation = os.environ['RUBIXLOCATION']
+
+if serverlocation == 'local':
+    filepathprefix = "/home/rubix/Desktop/Project-Ducttape/data/"
+elif serverlocation == 'ohio':
+    filepathprefix = "/home/ubuntu/Projects/flextape/"
+else:
+    raise EnvironmentError('Environment Variable "RUBIXLOCATION" seems not to be set.')
+
+filepath = filepathprefix + "po-6/" + date + "/PLIT_PO_6-" + date + ".xlsx" 
+
+print("--- Reading " + filepath + " ---")
+
+insertionItems = pd.read_excel(filepath, skiprows=1)
+
+client = MongoClient()
+insertionItems.columns = [c.replace(' ', '_') for c in insertionItems.columns]
+insertionItems.columns = [c.replace('/', '_') for c in insertionItems.columns]
+insertionItems.columns = [c.replace('.', '') for c in insertionItems.columns]
 
 # lines.Requisition_Data NA handling
-na_table = {"Req_ID": "",
-            "REQ_Line": 0}
+na_table = {"Req_ID": "", "REQ_Line": 0}
 
-df = df.fillna(value=na_table)
+insertionItems.fillna(value=na_table)
 
-for db_name in db_names:
-    db = db_client[db_name]
-    uniquePOIDs = dict((pono, False) for pono in df['PO_No'].unique().tolist())
-    for row in df.itertuples():
+print("--- Pushing Data to mongo ---")
+
+print(insertionItems.columns)
+for location in writelocation:
+    dbname = 'rubix-' + serverlocation + '-' + location 
+    print('Using database ' + dbname)
+    db = client[dbname]
+    uniquePOIDs = dict((pono, False) for pono in insertionItems['PO_No'].unique().tolist())
+    for row in insertionItems.itertuples():
         if not uniquePOIDs[row.PO_No]:
             if pd.isna(row.PO_AprvDate):
                 aprvDate = ""
@@ -61,8 +88,8 @@ for db_name in db_names:
                 }
             }, upsert=True)
             uniquePOIDs[row.PO_No] = True
-
-    for row in df.itertuples():
+    
+    for row in insertionItems.itertuples():
         db.PO_DATA.update({"PO_No": row.PO_No}, {
             '$push': {
                 "lines": {
@@ -82,8 +109,8 @@ for db_name in db_names:
                     "Quantity": row.PO_Qty
                 }
             }})
-
-    db.LAST_UPDATED.update({'dbname': "PO_DATA"}, {
-                           '$set': {'last_updated_time': time.time()}}, upsert=True)
-
-lake.end()
+        # db.REQ_DATA.find({"lines": {$elemMatch: {"Item": "02545903"}}})
+    
+    db.LAST_UPDATED.update({'dbname': "PO_DATA"}, {'$set': {'last_updated_time': time.time()}})
+    
+    print("--- PO Update Done ---")

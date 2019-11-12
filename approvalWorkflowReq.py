@@ -2,57 +2,30 @@
 # Created by Mickey G for Project Flextape use
 # To import Req Approveal Workflow data to mongodb, with flextape pipeline
 
-import pandas as pd
-import pymongo
-from pymongo import MongoClient
-from tqdm import tqdm
 import sys
 import time
-import os
+import pandas as pd
+from plitmongo import Lake
 
-if not sys.argv[1] and not sys.argv[2]:
-    raise ValueError(
-        'Arguments Needed: Date String (mmddyyyy-hhmmss), Write Location: One of (dev, prod, both)')
-date = sys.argv[1]
-writelocation = ['dev', 'prod'] if sys.argv[2] == 'both' else [sys.argv[2]]
+lake = Lake()
+datestring, db_type = lake.parse_args(sys.argv[1:])
+db_client = lake.get_db(use_auth=False)
+df = lake.get_df("approval_workflow_req", "SLT_REQ_WF", datestring)
+db_names = lake.get_db_names(db_type)
 
-serverlocation = os.environ['RUBIXLOCATION']
+na_table = {"Work_List": "",
+            "Approval_Number": ""}
 
-if serverlocation == 'local':
-    filepathprefix = "/home/rubix/Desktop/Project-Ducttape/data/"
-elif serverlocation == 'ohio':
-    filepathprefix = "/home/ubuntu/Projects/flextape/"
-else:
-    raise EnvironmentError(
-        'Environment Variable "RUBIXLOCATION" seems not to be set.')
+df = df.fillna(value=na_table)
 
-filepath = filepathprefix + "approval_workflow_req/" + \
-    date + "/SLT_REQ_WF-" + date + ".xlsx"
-
-print("--- Reading " + filepath + " ---")
-
-# Reads Excel File
-insertionItems = pd.read_excel(filepath, skiprows=1)
-
-# Fills spaces in Column Names with underscores
-insertionItems.columns = [c.replace(' ', '_') for c in insertionItems.columns]
-insertionItems.columns = [c.replace('.', '') for c in insertionItems.columns]
-insertionItems.columns = [c.replace('/', '_') for c in insertionItems.columns]
-
-client = MongoClient()
-
-print("--- Pushing Data to Mongo ---")
-
-for location in writelocation:
-    dbname = "rubix-{}-{}".format(serverlocation, location)
-    print("Using database {}".format(dbname))
-    db = client[dbname]
+for db_name in db_names:
+    db = db_client[db_name]
     # clear existing data
-    uniqueReqArr = insertionItems['Req_ID'].unique().tolist()
+    uniqueReqArr = df['Req_ID'].unique().tolist()
     for req_num in uniqueReqArr:
         db.REQ_DATA.update_one({"REQ_No": req_num}, {'$set': {"worklist": []}})
 
-    for row in tqdm(insertionItems.itertuples()):
+    for row in df.itertuples():
         db.REQ_DATA.update_one({"REQ_No": row.Req_ID}, {"$push": {"worklist": {
             "Appr_Inst": row.Appr_Inst,
             "Unit": row.Unit,
@@ -69,6 +42,7 @@ for location in writelocation:
         }}})
 
     db.LAST_UPDATED.update_one({'dbname': "REQ_DATA_WORKFLOW"}, {
-                               '$set': {'last_updated_time': time.time()}})
+                               '$set': {'last_updated_time': time.time()}},
+                               upsert=True)
 
-print("--- REQ Workflow Update Done ---")
+lake.end()
