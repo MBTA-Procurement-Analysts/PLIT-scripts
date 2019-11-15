@@ -14,8 +14,6 @@ db_client = lake.get_db(use_auth=False)
 df = lake.get_df("req-6", "PLIT_REQ_6", datestring)
 db_names = lake.get_db_names(db_type)
 
-# TOTEST
-
 # It is possible for a REQ to have no Buyer associated with it.
 # One such case is that when a REQ was "federalized" (i.e. change of biz unit)
 # The original REQ will lose it's Requester and Buyer, making these fields NAs

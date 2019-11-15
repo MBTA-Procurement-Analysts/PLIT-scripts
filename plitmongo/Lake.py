@@ -13,8 +13,27 @@ from plitmongo.configme import MONGO_POSSIBLE_DBTYPES
 
 
 class Lake:
+    """PLIT Mongo Scripts Helper (Lake) Object 
 
+    This object reads excel query files and as `pandas` dataframe, make column
+    name replacements, and handles initialization of mongoDB instances, while
+    providing useful log entries for inspections. This class is set-agnostic,
+    meaning that it *does not* replace NAs in created dataframes, nor does it 
+    handle any data imports to mongoDB. This class is an effort to abstract as
+    much pre-processing as possible.
+
+    Attributes:
+        env (list): relevant system env variables, defined in configme_ module.
+        is_cron (boolean): if this script is run automatically by cron or 
+                           jupyter, and this switch, for now, is for an 
+                           informational log entry.
+    """
     def __init__(self):
+        """ Initializes environmental variables and loging of this Lake Object.
+        
+        This method first gathers needed environmental variables defined in the
+        configme_ module.  
+        """
         self.env = self._get_env_vars()
         self._logger_setup()
         self.is_cron = not os.isatty(sys.stdin.fileno())
