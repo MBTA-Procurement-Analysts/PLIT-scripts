@@ -43,7 +43,7 @@ class Lake:
     def get_df_by_direct_path(self, path):
         return self._get_df_raw_path(path)
 
-    def get_df(self, setname, queryname, datestring, databasepath=""):
+    def get_df(self, setname, queryname, datestring, databasepath="", **kwargs):
         self._log("---- Getting Query File ----")
         if databasepath == "":
             self._log("Data Basepath not specified. Reading from Env. Variables.")
@@ -52,7 +52,7 @@ class Lake:
         self._log("Set Name: {}".format(setname))
         self._log("Query: {}".format(queryname))
         self._log("-"*28)
-        return self._get_df_raw_path("{0}/{1}/{2}/{3}-{2}.xlsx".format(databasepath, setname, datestring, queryname))
+        return self._get_df_raw_path("{0}/{1}/{2}/{3}-{2}.xlsx".format(databasepath, setname, datestring, queryname), **kwargs)
 
     def _get_env_vars(self):
         res = {}
@@ -64,8 +64,8 @@ class Lake:
                     "Environment Variable {} is not found on system.".format(env))
         return res
 
-    def _get_df_raw_path(self, path):
-        raw_df = pd.read_excel(path, skiprows=1)
+    def _get_df_raw_path(self, path, **kwargs):
+        raw_df = pd.read_excel(path, skiprows=1, **kwargs)
         for old, new in PANDAS_REPLACE_TABLE:
             raw_df.columns = [c.replace(old, new) for c in raw_df.columns]
         self._log("Dataframe imported and column names replaced.")

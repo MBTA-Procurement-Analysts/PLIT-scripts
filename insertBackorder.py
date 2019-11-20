@@ -7,10 +7,11 @@ import time
 import pandas as pd
 from plitmongo import Lake
 
+
 lake = Lake()
 datestring, db_type = lake.parse_args(sys.argv[1:])
 db_client = lake.get_db(use_auth=False)
-df = lake.get_df("itembackorder", "ITEM-BACKORDER", datestring)
+df = lake.get_df("itembackorder", "ITEM-BACKORDER", datestring, dtype={"Item": str})
 db_names = lake.get_db_names(db_type)
 
 for db_name in db_names:
@@ -32,3 +33,6 @@ for db_name in db_names:
                            upsert=True)
 
 lake.end()
+
+
+# %%
