@@ -26,7 +26,7 @@ else:
 
 filepath = filepathprefix + "itemwarehouse/" + date + "/ITEM-WAREHOUSE-" + date + ".xlsx"
 
-insertionItems = pd.read_excel(filepath, skiprows = 1) 
+insertionItems = pd.read_excel(filepath, skiprows = 1)
 
 client = MongoClient()
 insertionItems.columns = [c.replace(' ', '_') for c in insertionItems.columns]
@@ -36,7 +36,7 @@ insertionItems['Item'] = insertionItems['Item'].str.strip()
 
 for location in writelocation:
     uniqueItemArr = insertionItems['Item'].unique().tolist()
-    dbname = 'rubix-' + serverlocation + '-' + location 
+    dbname = 'rubix-' + serverlocation + '-' + location
     print('Using database ' + dbname)
     db = client[dbname]
     for itemno in tqdm(uniqueItemArr):
@@ -45,7 +45,7 @@ for location in writelocation:
                 'Warehouse_Information': []
                 }
             })
-    
+
     for row in tqdm(insertionItems.itertuples()):
         if pd.isna(row.Last_Ptwy):
             ptawayDate = ""

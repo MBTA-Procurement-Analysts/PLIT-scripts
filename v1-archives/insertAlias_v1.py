@@ -47,7 +47,7 @@ for location in writelocation:
     # Find unique Item IDs, since Items with multiple viable substitues spans across
     #   multiple lines.
     uniqueItemIDs = dict((itemno, False) for itemno in insertionItems['Item'].unique().tolist())
-    dbname = 'rubix-' + serverlocation + '-' + location 
+    dbname = 'rubix-' + serverlocation + '-' + location
     print('Using database ' + dbname)
     db = client[dbname]
 
@@ -57,7 +57,7 @@ for location in writelocation:
                 'Viable_Subs': []
                 }
             }, upsert = True)
-    
+
     for row in tqdm(insertionItems.itertuples()):
         if not uniqueItemIDs[row.Item]:
             db.ITEM_DATA.update({'Item_No': row.Item}, {
@@ -73,7 +73,7 @@ for location in writelocation:
                         }
                     }, upsert = True)
             uniqueItemIDs[row.Item] = True
-    
+
         db.ITEM_DATA.update({'Item_No': row.Item}, {
             '$push': {
                 'Viable_Subs': {

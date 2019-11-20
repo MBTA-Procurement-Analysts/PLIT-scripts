@@ -29,7 +29,7 @@ filepath = filepathprefix + "itembackorder/" + date + "/ITEM-BACKORDER-" + date 
 print("--- Reading " + filepath + " ---")
 
 # Reads Excel File
-# Type of ItemID has to be specified since Pandas will think columns 
+# Type of ItemID has to be specified since Pandas will think columns
 #   without alphabets are ints
 insertionItems = pd.read_excel(filepath, skiprows = 1, dtype = {'Item': str})
 
@@ -46,19 +46,19 @@ print("Adding Data...")
 
 
 for location in writelocation:
-    dbname = 'rubix-' + serverlocation + '-' + location 
+    dbname = 'rubix-' + serverlocation + '-' + location
     print('Using database ' + dbname)
     db = client[dbname]
     # Resets all Backorder Amount that != 0 to 0, since the original query will
-    #   not include 0-amount entries; thus if the amount goes to 0 there is no 
+    #   not include 0-amount entries; thus if the amount goes to 0 there is no
     #   entry in the query.
     # Multi Flag set as true to cover all Entries
     db.ITEM_DATA.update({'Total_Backorder': {'$ne': 0}}, {'$set' : {'Total_Backorder': 0}}, multi = True)
 
     for row in tqdm(insertionItems.itertuples()):
-        db.ITEM_DATA.update({'Item_No': row.Item}, 
-                {'$set': 
-                    {'Total_Backorder': row.Qty_Req}}) 
-    
+        db.ITEM_DATA.update({'Item_No': row.Item},
+                {'$set':
+                    {'Total_Backorder': row.Qty_Req}})
+
     db.LAST_UPDATED.update({'dbname': "ITEM_DATA"}, {'$set': {'last_updated_time': time.time()}})
     #db.REQ_DATA.find({"lines": {$elemMatch: {"Item": "02545903"}}})

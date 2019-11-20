@@ -10,7 +10,7 @@ def parseArgs(args):
 
     Returns:
         (str, str): Tuple of Date string for pathnames, and Destination database name
-        str: 
+        str:
 
     Raises:
         ValueError: If date string is invalid, or destination database name is unexpected.

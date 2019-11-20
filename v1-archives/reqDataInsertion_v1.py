@@ -52,7 +52,7 @@ insertionItems = insertionItems.fillna(value = na_values)
 for location in writelocation:
     uniqueReqIDs = dict((reqno, False) for reqno in insertionItems['Req_ID'].unique().tolist())
     uniqueItemArr = insertionItems['Item'].unique().tolist()
-    dbname = 'rubix-' + serverlocation + '-' + location 
+    dbname = 'rubix-' + serverlocation + '-' + location
     print('Using database ' + dbname)
     db = client[dbname]
     for row in tqdm(insertionItems.itertuples()):
@@ -91,7 +91,7 @@ for location in writelocation:
             }
             }, upsert = True)
             uniqueReqIDs[row.Req_ID] = True
-    
+
     for row in tqdm(insertionItems.itertuples()):
         db.REQ_DATA.update({"REQ_No": row.Req_ID}, {
             '$addToSet': {
@@ -108,9 +108,9 @@ for location in writelocation:
                     }
             }})
         # db.REQ_DATA.find({"lines": {$elemMatch: {"Item": "02545903"}}})
-    
+
     db.LAST_UPDATED.update({'dbname': "REQ_DATA"}, {'$set': {'last_updated_time': time.time()}})
-    
-    
+
+
     print("Req Update Done!")
 

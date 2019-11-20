@@ -18,7 +18,6 @@
 import pandas as pd
 import pymongo
 from pymongo import MongoClient
-from tqdm import tqdm
 import sys
 import time
 import os
@@ -61,7 +60,7 @@ for location in writelocation:
     db = client[dbname]
     uniquePOIDs = dict((pono, False)
                        for pono in insertionItems['PO_No'].unique().tolist())
-    for row in tqdm(insertionItems.itertuples()):
+    for row in insertionItems.itertuples():
         if not uniquePOIDs[row.PO_No]:
 
             if pd.isna(row.Denial_Date_Time):
@@ -87,7 +86,7 @@ for location in writelocation:
             }, upsert=True)
             uniquePOIDs[row.PO_No] = True
 
-    for row in tqdm(insertionItems.itertuples()):
+    for row in insertionItems.itertuples():
         db.PO_DATA.update({"PO_No": row.PO_No}, {
             '$push': {
                 "worklist": {

@@ -48,18 +48,18 @@ for location in writelocation:
     #   once, and thus we don't need to check if we are writing multiple times for
     #   the same Item ID.
     uniqueItemArr = insertionItems['Item'].unique().tolist()
-    dbname = 'rubix-' + serverlocation + '-' + location 
+    dbname = 'rubix-' + serverlocation + '-' + location
     print('Using database ' + dbname)
     db = client[dbname]
 
     for itemno in tqdm(uniqueItemArr):
         db.ITEM_DATA.update({'Item_No': itemno}, {
             '$set': {
-                'Locations': [] 
+                'Locations': []
                 }
             }, upsert = True)
-    
-    
+
+
     for row in tqdm(insertionItems.itertuples()):
         db.ITEM_DATA.update({'Item_No': row.Item}, {
             '$push': {
@@ -74,6 +74,6 @@ for location in writelocation:
                 }
             }
         })
-    
+
     db.LAST_UPDATED.update({'dbname': "ITEM_DATA"}, {'$set': {'last_updated_time': time.time()}})
     #db.REQ_DATA.find({"lines": {$elemMatch: {"Item": "02545903"}}})

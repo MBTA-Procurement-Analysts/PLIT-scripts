@@ -41,7 +41,7 @@ elif serverlocation == 'ohio':
 else:
     raise EnvironmentError('Environment Variable "RUBIXLOCATION" seems not to be set.')
 
-filepath = filepathprefix + "po-6/" + date + "/PLIT_PO_6-" + date + ".xlsx" 
+filepath = filepathprefix + "po-6/" + date + "/PLIT_PO_6-" + date + ".xlsx"
 
 print("--- Reading " + filepath + " ---")
 
@@ -61,7 +61,7 @@ print("--- Pushing Data to mongo ---")
 
 print(insertionItems.columns)
 for location in writelocation:
-    dbname = 'rubix-' + serverlocation + '-' + location 
+    dbname = 'rubix-' + serverlocation + '-' + location
     print('Using database ' + dbname)
     db = client[dbname]
     uniquePOIDs = dict((pono, False) for pono in insertionItems['PO_No'].unique().tolist())
@@ -88,7 +88,7 @@ for location in writelocation:
                 }
             }, upsert=True)
             uniquePOIDs[row.PO_No] = True
-    
+
     for row in insertionItems.itertuples():
         db.PO_DATA.update({"PO_No": row.PO_No}, {
             '$push': {
@@ -110,7 +110,7 @@ for location in writelocation:
                 }
             }})
         # db.REQ_DATA.find({"lines": {$elemMatch: {"Item": "02545903"}}})
-    
+
     db.LAST_UPDATED.update({'dbname': "PO_DATA"}, {'$set': {'last_updated_time': time.time()}})
-    
+
     print("--- PO Update Done ---")

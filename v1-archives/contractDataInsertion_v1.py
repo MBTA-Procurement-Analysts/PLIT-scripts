@@ -44,7 +44,7 @@ insertionItems.columns = [c.replace('.', '') for c in insertionItems.columns]
 
 for location in writelocation:
     uniqueContractIDs = dict((contractNo, False) for contractNo in insertionItems['Contract'].unique().tolist())
-    dbname = 'rubix-' + serverlocation + '-' + location 
+    dbname = 'rubix-' + serverlocation + '-' + location
     print('Using database ' + dbname)
     db = client[dbname]
     for row in tqdm(insertionItems.itertuples()):
@@ -60,7 +60,7 @@ for location in writelocation:
                     'Vendor_ID': row.Vendor,
                     "Vendor_Name": row.Name,
                     "lines": []
-                    } 
+                    }
                 }, upsert=True)
         uniqueContractIDs[row.Contract] = True
     for row in tqdm(insertionItems.itertuples()):
@@ -71,8 +71,8 @@ for location in writelocation:
                     "More_Info": row.More_Info,
                     "Max_Amt": row.Max_Amt})
                 }}, upsert = True)
-    
-    
-    
+
+
+
     db.LAST_UPDATED.update({'dbname': "CONTRACT_DATA"}, {'$set': {'last_updated_time': time.time()}})
     print("Contract Update Done!")

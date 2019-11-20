@@ -48,10 +48,10 @@ for location in writelocation:
     print('Using database ' + dbname)
     db = client[dbname]
     for row in tqdm(insertionItems.itertuples()):
-        db.REQ_DATA.update_one({"$and": [{"REQ_No": row.Req_ID}, 
+        db.REQ_DATA.update_one({"$and": [{"REQ_No": row.Req_ID},
                                             {"Business_Unit": row.Unit}]},
                                  {"$set": {"lines.$[l].PO": {
-                                     "PO_Number": row.PO_No, 
+                                     "PO_Number": row.PO_No,
                                      "Line_No": row.PO_Line}}},
                                  array_filters=[{"l.Line_No": row.REQ_Line}])
 

@@ -33,6 +33,3 @@ for db_name in db_names:
                            upsert=True)
 
 lake.end()
-
-
-# %%

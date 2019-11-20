@@ -26,7 +26,7 @@ elif serverlocation == 'ohio':
 else:
     raise EnvironmentError('Environment Variable "RUBIXLOCATION" seems not to be set.')
 
-filepath = filepathprefix + "early_warning/" + date + "/SLT_CPTL_EARLYWARNING-" + date + ".xlsx" 
+filepath = filepathprefix + "early_warning/" + date + "/SLT_CPTL_EARLYWARNING-" + date + ".xlsx"
 
 print("--- Reading " + filepath + " ---")
 
@@ -41,10 +41,10 @@ print("--- Pushing Data to mongo ---")
 
 print(insertionItems.columns)
 for location in writelocation:
-    dbname = 'rubix-' + serverlocation + '-' + location 
+    dbname = 'rubix-' + serverlocation + '-' + location
     print('Using database ' + dbname)
     db = client[dbname]
-    db.EARLY_WARNING.drop()   
+    db.EARLY_WARNING.drop()
     print("--- DATABASE CLEARED IN ANTICIPATION OF NEW DATA ---")
 #    uniquePOIDs = dict((pono, False) for pono in insertionItems['PO_No'].unique().tolist())
     for row in tqdm(insertionItems.itertuples()):
@@ -94,7 +94,7 @@ for location in writelocation:
             db.EARLY_WARNING.insert(
                     {
 
-                    'Req_Descr': row.Req_Descr,   
+                    'Req_Descr': row.Req_Descr,
                     'Business_Unit': row.Unit,
                     'Req_ID': row.Req_ID,
                     'Req_Created_Date': Req_Created_Date,
@@ -112,7 +112,7 @@ for location in writelocation:
                     'Date_Approved': Date_Approved,
                     })
 
-    
+
     db.LAST_UPDATED.update({'dbname': "EARLY_WARNING"}, {'$set': {'last_updated_time': time.time()}})
-    
+
     print("--- EARLY WARNING PULL COMPLETE REJOICE ---")
