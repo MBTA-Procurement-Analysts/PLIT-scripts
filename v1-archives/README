@@ -1,0 +1,5 @@
+This folder stores the v1 mongo scripts as of 2019-11-12 Tuesday, for archival purposes.
+
+v1 did not use the `plitmongo` package to handle datarame imports, db name generations, and other initialization tasks.
+
+The core (mongo update logic) script content are more or less the same, main differences are in na-handling (`plitmongo` package now handles it).
