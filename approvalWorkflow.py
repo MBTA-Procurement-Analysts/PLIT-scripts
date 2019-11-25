@@ -10,7 +10,7 @@ from plitmongo import Lake
 lake = Lake()
 datestring, db_type = lake.parse_args(sys.argv[1:])
 db_client = lake.get_db(use_auth=False)
-df = lake.get_df("approval_workflow", "SLT_PO_WF", datestring)
+df = lake.get_df("approval_workflow", "PLIT_PO_WF", datestring)
 db_names = lake.get_db_names(db_type)
 
 na_table = {"Work_List": "",

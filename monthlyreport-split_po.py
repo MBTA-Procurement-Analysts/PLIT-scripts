@@ -9,7 +9,7 @@ from datetime import datetime
 lake = Lake()
 datestring, db_type = lake.parse_args(sys.argv[1:])
 db_client = lake.get_db(use_auth=False)
-df = lake.get_df("split_po", "NG_NO_SPILT_PO_SIDE", datestring)
+df = lake.get_df("split_po", "MTHRPT_PO_SPLIT", datestring)
 db_names = lake.get_db_names(db_type)
 
 na_table = {"Origin": "",

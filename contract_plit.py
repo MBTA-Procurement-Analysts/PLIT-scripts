@@ -10,7 +10,7 @@ import time
 lake = Lake()
 datestring, db_type = lake.parse_args(sys.argv[1:])
 db_client = lake.get_db(use_auth=False)
-df = lake.get_df("contract_plit", "JLYU_CONTRACT_PUBLIC", datestring)
+df = lake.get_df("contract_plit", "PLIT_CONTRACTS", datestring)
 db_names = lake.get_db_names(db_type)
 
 
