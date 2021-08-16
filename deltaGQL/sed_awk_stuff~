@@ -1,0 +1,1 @@
+cat filename.txt | sed -e 's/int64/int/g' -e 's/datetime64\[ns\]/datetime/g' -e 's/$/,/' -e "s/^/'/" | awk '{print"       "$1": " $2}' | sed "s/:/':/" > top_line_2.txt > filename_revised.txt

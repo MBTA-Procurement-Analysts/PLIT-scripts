@@ -67,6 +67,7 @@ for db_name in db_names:
                     "Status": row.Status,
                     "Approved_By": row.By,
                     "Approved_On": row.Date,
+                    "Mgmt_Exception": "False",
                     "Vendor": {
                         "Number": row.Vendor,
                         "Name": row.Name
