@@ -2,13 +2,11 @@ import deltaGQL
 import sys
 import subprocess
 
+# Get required parameters
 querybasename = sys.argv[1]
 window = sys.argv[2]
-unit = None
 unit = deltaGQL.check_argument(3)
 
+# Run tape files in loop
 deltaGQL.pull_historical_data(querybasename, window, unit)
-
-filepath="/home/rubix/Desktop/Project-Ducttape/delta/"
-print("Latest delta version of {} is version {}".format(querybasename, deltaGQL.get_latest_version(filepath+querybasename)))
 

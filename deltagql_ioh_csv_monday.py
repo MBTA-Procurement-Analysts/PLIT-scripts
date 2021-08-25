@@ -6,11 +6,7 @@ import deltaGQL as dl
 
 # Check if spark session is already running or create new one                                                                                                                                              
 from pyspark.sql.session import SparkSession
-spark = SparkSession.builder.appName("DeltaTemplate") \
-        .config("spark.driver.memory", "4g") \
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
-        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
-        .getOrCreate()
+spark = SparkSession.builder.appName("DeltaTemplate").getOrCreate()
 
 # Define path for storing IOH csv files
 csv_destination_path = '/home/rubix/O_drive_mnt_pt/INVENTORY/Warehouse Logistics/Reports & Publications/Kate Cairns/Inventory On Hand for Scott/DATA/mondaycsvfiles/'

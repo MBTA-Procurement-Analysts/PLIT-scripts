@@ -2,10 +2,11 @@ import deltaGQL
 import sys
 import subprocess
 
+# Get required parameters
 querybasename = sys.argv[1]
-window = sys.argv[2]
-unit = None
+quantity = sys.argv[2]
 unit = deltaGQL.check_argument(3)
 
-deltaGQL.pull_historical_data(querybasename, window, unit)
+# Run tape files in loop
+deltaGQL.pull_historical_data(querybasename, quantity, unit)
 

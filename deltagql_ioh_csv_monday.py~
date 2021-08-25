@@ -7,7 +7,7 @@ import deltaGQL as dl
 # Check if spark session is already running or create new one                                                                                                                                              
 from pyspark.sql.session import SparkSession
 spark = SparkSession.builder.appName("DeltaTemplate") \
-        .config("spark.driver.memory", "4g") \
+        .config("spark.driver.memory", "8g") \
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
         .getOrCreate()
@@ -33,5 +33,4 @@ for i in all_files:
 	 if i.endswith('.csv'):
 	    csv_files.append(i)
 os.rename(csv_destination_path+'Latest_Monday/'+csv_files[0], csv_destination_path+'Latest_Monday/IOH_Latest_Monday.csv')
-print('Latest Monday IOH csv file ready')'''
-
+print('Latest Monday IOH csv file ready')

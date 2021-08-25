@@ -40,38 +40,3 @@ primary_keys ={ "GQL_REQ_HDR_V2": ("BUSINESS_UNIT", "REQ_ID"),
                 "GQL_PL_INV_BY_BASE": ("IOH-UNIT", "IOH-ITEM_ID", "IOH-QTY_ON_HAND", "IOH-ON_HAND_VALUE", "Last_Modified_Timestamp")}
 
 
-fields = {"GQL_REQ_HDR": (),
-	  "GQL_REQ_LINE": (),
-          "GQL_REQ_LINE_SHIP": (),
-          "GQL_REQ_LN_DISTRIB": (),
-          "GQL_PO_LINE": (),
-          "GQL_PO_LINE_SHIP": (),
-          "GQL_PO_HDR": (),
-          "GQL_PO_AW" : (),
-          "GQL_PO_APPR_HDR_VW": (),
-          "GQL_EOAW_USERINST": (),
-          "GQL_PSOPRDEFN": (),
-          "GQL_MB_REQ_HOLD_HDR": (),
-          "GQL_MB_REQ_HOLD_LN": (),
-          "GQL_MB_REQ_HDR": (),
-          "GQL_MB_PO_BID_CAT": (),
-          "GQL_MB_PO_HDR": ()}
-
-
-display_name = {"GQL_REQ_HDR": (),
-	  "GQL_REQ_LINE": (),
-          "GQL_REQ_LINE_SHIP": (),
-          "GQL_REQ_LN_DISTRIB": (),
-          "GQL_PO_LINE": (),
-          "GQL_PO_LINE_SHIP": (),
-          "GQL_PO_HDR": (),
-          "GQL_PO_AW" : (),
-          "GQL_PO_APPR_HDR_VW": (),
-          "GQL_EOAW_USERINST": (),
-          "GQL_PSOPRDEFN": (),
-          "GQL_MB_REQ_HOLD_HDR": (),
-          "GQL_MB_REQ_HOLD_LN": (),
-          "GQL_MB_REQ_HDR": (),
-          "GQL_MB_PO_BID_CAT": (),
-          "GQL_MB_PO_HDR": ()}
-

@@ -1,5 +1,4 @@
 import os
-#os.chdir('/home/rubix/Desktop/Project-Ducttape/scripts/')
 import deltaGQL as dl
 import datetime
 import numpy as np

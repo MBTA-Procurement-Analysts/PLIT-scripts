@@ -23,7 +23,7 @@ spark = SparkSession.builder.appName("DeltaTemplate") \
 # Load latest data:
 deltapath = os.getenv("RUBIXTAPEDELTAPATH")
 
-# Load prod dfs: 
+# Load prod dfs:
 production_gql_req_hdr = deltaGQL.load_latest_version(deltapath+"/GQL_REQ_HDR")
 production_gql_req_dflt_tbl = deltaGQL.load_latest_version(deltapath+"/GQL_REQ_DFLT_TBL")
 production_gql_req_line = deltaGQL.load_latest_version(deltapath+"/GQL_REQ_LINE")

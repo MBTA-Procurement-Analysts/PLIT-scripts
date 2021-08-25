@@ -11,21 +11,15 @@ from pyspark.sql.functions import *
 
 # Check if spark session is already running or create new one
 from pyspark.sql.session import SparkSession
-spark = SparkSession.builder.appName("DeltaTemplate") \
-        .config("spark.driver.memory", "4g") \
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
-        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
-        .getOrCreate()
-
+spark = SparkSession.builder.appName("DeltaTemplate").getOrCreate()
 
 # Get setname, querybasename and date passed in as arguments from tape file
 setname = sys.argv[1]
 querybasename = sys.argv[2]
 date = sys.argv[3]
 
-# Check the file output format (delta format if specified, otherwise always saves as excel)
-save_file_as = None
-save_file_as = deltaGQL.check_load_type_argument()
+# Check the load type (stores in daily/monthly table as specified argument, if nothing or anything other than daily/monthly/yearly is specified then stores in daily table)
+save_file_as = deltaGQL.check_argument(4)
 
 # Specify path for reading Ducttape file, saving Delta file, gql_tableau excel filename and primary keys of the table
 datapath = os.getenv("RUBIXTAPEDATAPATH") 
@@ -56,5 +50,5 @@ print("Ducttape file successfully converted into Spark Dataframe")
 table_pkeydictionary = deltaGQL.primary_keys
 primary_keys = deltaGQL.get_values(table_pkeydictionary, querybasename)
 
-# Save file as excel or delta (as specified in argument)
+# Ingest file in daily/monthly delta table (as specified in argument)(upsert and save)
 deltaGQL.save_as(latest_df, primary_keys, deltafilepath, save_file_as)

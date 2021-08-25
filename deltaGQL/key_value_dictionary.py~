@@ -37,7 +37,7 @@ primary_keys ={ "GQL_REQ_HDR_V2": ("BUSINESS_UNIT", "REQ_ID"),
                 "GQL_INV_ITEM_FAM": ("SETID", "INV_PROD_FAM_CD", "EFFDT"),
                 "GQL_TRANSACTION_INV": ("BUSINESS_UNIT", "INV_ITEM_ID", "DT_TIMESTAMP", "SEQ_NBR", "STORAGE_AREA", "STOR_LEVEL_1", "STOR_LEVEL_2", "STOR_LEVEL_3", "STOR_LEVEL_4", "QTY", "RECEIVER_ID"),
                 "GQL_IN_DEMAND": ("BUSINESS_UNIT", "DEMAND_SOURCE", "SOURCE_BUS_UNIT", "ORDER_NO", "ORDER_INT_LINE_NO", "SCHED_LINE_NBR", "INV_ITEM_ID", "DEMAND_LINE_NO"),
-                "GQL_KJ_INV_BY_BASE": ("UNIT", "ITEM", "QTY_ON_HAND", "ON_HAND_VALUE", "Last_Modified_Timestamp")}
+                "GQL_PL_INV_BY_BASE": ("IOH-UNIT", "IOH-ITEM_ID", "IOH-QTY_ON_HAND", "IOH-ON_HAND_VALUE", "Last_Modified_Timestamp")}
 
 
 fields = {"GQL_REQ_HDR": (),

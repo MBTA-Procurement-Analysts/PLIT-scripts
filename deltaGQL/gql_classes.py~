@@ -1,0 +1,124 @@
+import graphene
+'''
+class Schema_PO_WF_APPR(graphene.ObjectType):
+
+    def abcd(str):
+        print("printing someting {}".format(str))
+
+
+class Schema_REQS_ON_HOLD_HISTORY(graphene.ObjectType):
+    def	abcd(str):
+        print("printing someting again{}".format(str))
+'''
+class Schema_PO_WF_APPR(graphene.ObjectType):
+    Unit = graphene.String()
+    PO_No = graphene.String()
+    PO_Date = graphene.String()
+    PO_Status = graphene.String()
+    User = graphene.String()
+    OPERID_Decoded = graphene.String()
+    Initiated_Datetime = graphene.String()
+    Approval_Datetime = graphene.String()
+    Pending_Days = graphene.String()
+    Step_User_ID = graphene.String()
+    Step_Status = graphene.String()
+    Step_Instance = graphene.String()
+    Thread_ID = graphene.String()
+    Path = graphene.String()
+    REQ_APPR_Date = graphene.String()
+    Req_ID = graphene.String()
+    Hold = graphene.String()
+    Buyer = graphene.String()
+    Line = graphene.String()
+    Hold_Type = graphene.String()
+    Due = graphene.String()
+    Comments = graphene.String()
+
+
+class Schema_REQS_ON_HOLD_HISTORY(graphene.ObjectType):
+    Unit = graphene.String()
+    Req_ID = graphene.String()
+    Requisition_Status = graphene.String()
+    Hold = graphene.String()
+    Approval_Date = graphene.String()
+    Origin = graphene.String()
+    Entered_By = graphene.String()
+    User_Modify = graphene.String()
+    Req_Entered = graphene.String()
+    Req_Date = graphene.String()
+    Req_Line = graphene.String()
+    MB_Hold_Status = graphene.String()
+    Buyer = graphene.String()
+    Updated_By = graphene.String()
+    Hold_Line = graphene.String()
+    Hold_Line_DateTime = graphene.String()
+    Due = graphene.String()
+    Hold_Line_Status = graphene.String()
+    Hold_Type = graphene.String()
+    Comments = graphene.String()
+    PO_No = graphene.String()
+    PO_Line = graphene.String()
+
+
+class Query(graphene.ObjectType):
+    PO_WF_APPR = graphene.List(Schema_PO_WF_APPR)
+    REQS_ON_HOLD_HISTORY = graphene.List(Schema_REQS_ON_HOLD_HISTORY)
+
+    def resolve_PO_WF_APPR(self, info):
+        json_list = []
+        for each_dict in sqlDF1.take(sqlDF1.count()):
+            Unit = each_dict.get('BUSINESS_UNIT')
+            PO_No = each_dict.get('PO_ID')
+            PO_Date = each_dict.get('PO_DT')
+            PO_Status = each_dict.get('PO_STATUS')
+            User = each_dict.get('OPRID')
+            OPERID_Decoded = each_dict.get('OPRDEFNDESC')
+            Initiated_Datetime = each_dict.get('INITIATED_DATETIME')
+            Approval_Datetime = each_dict.get('APPROVAL_DATETIME')
+            Pending_Days = each_dict.get('PENDING_DAYS')
+            Step_User_ID = each_dict.get('EOAWORIG_OPRID')
+            Step_Status = each_dict.get('EOAWSTEP_STATUS')
+            Step_Instance = each_dict.get('EOAWSTEP_INSTANCE')
+            Thread_ID = each_dict.get('EOAWTHREAD_ID')
+            Path = each_dict.get('EOAWPATH_ID')
+            REQ_APPR_Date = each_dict.get('REQ_APPR_DATE')
+            Req_ID = each_dict.get('REQ_ID')
+            Hold = each_dict.get('HOLD_STATUS')
+            Buyer = each_dict.get('BUYER_ID')
+            Line = each_dict.get('LINE_NBR')
+            Hold_Type = each_dict.get('MB_HOLD_TYPE')
+            Due = each_dict.get('DUE_DT')
+            Comments = each_dict.get('COMMENTS60')
+            each_dict_schema = Schema_PO_WF_APPR(Unit, PO_No, PO_Date, PO_Status, User, OPERID_Decoded, Initiated_Datetime, Approval_Datetime, Pending_Days, Step_User_ID, Step_Status, Step_Instance, Thread_ID, Path, REQ_APPR_Date, Req_ID, Hold, Buyer, Line, Hold_Type, Due, Comments)
+            json_list.append(each_dict_schema)
+        return json_list
+
+
+    def resolve_REQS_ON_HOLD_HISTORY(self, info):
+        json_list = []
+        for each_dict in sqlDF2.take(sqlDF2.count()):
+            Unit = each_dict.get('BUSINESS_UNIT')
+            Req_ID = each_dict.get('REQ_ID')
+            Requisition_Status = each_dict.get('REQ_STATUS')
+            Hold = each_dict.get('HOLD_STATUS')
+            Approval_Date = each_dict.get('APPROVAL_DATE')
+            Origin = each_dict.get('ORIGIN')
+            Entered_By = each_dict.get('OPRID_ENTERED_BY')
+            User_Modify = each_dict.get('OPRID_MODIFIED_BY')
+            Req_Entered = each_dict.get('REQ_ENTERED')
+            Req_Date = each_dict.get('REQ_DATE')
+            Req_Line = each_dict.get('LINE_NBR')
+            MB_Hold_Status = each_dict.get('MB_HOLD_STATUS')
+            Buyer = each_dict.get('BUYER_ID')
+            Updated_By = each_dict.get('LAST_UPDATED_BY')
+            Hold_Line = each_dict.get('LINE_NBR')
+            Hold_Line_DateTime = each_dict.get('HOLD_LINE_DATETIME')
+            Due = each_dict.get('DUE_DATE')
+            Hold_Line_Status = each_dict.get('MB_LINE_STATUS')
+            Hold_Type = each_dict.get('MB_HOLD_TYPE')
+            Comments = each_dict.get('COMMENTS60')
+            PO_No = each_dict.get('PO_ID')
+            PO_Line = each_dict.get('LINE_NBR')
+            each_dict_schema = Schema_REQS_ON_HOLD_HISTORY( Unit, Req_ID, Requisition_Status, Hold, Approval_Date, Origin, Entered_By, User_Modify, Req_Entered, Req_Date, Req_Line, MB_Hold_Status, Buyer, Updated_By, Hold_Line, Hold_Line_DateTime, Due, Hold_Line_Status, Hold_Type, Comments, PO_No, PO_Line)
+            json_list.append(each_dict_schema)
+        return json_list

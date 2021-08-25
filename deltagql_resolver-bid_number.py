@@ -14,29 +14,27 @@ import deltaGQL
 
 # Check if spark session is already running or create new one
 from pyspark.sql.session import SparkSession
-spark = SparkSession.builder.appName("DeltaTemplate") \
-        .config("spark.driver.memory", "4g") \
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
-        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
-        .getOrCreate()
+spark = SparkSession.builder.appName("DeltaTemplate").getOrCreate()
 
+# Load latest data:
+deltapath = os.getenv("RUBIXTAPEDELTAPATH")
 
 # Load prod dfs:
-production_gql_req_hdr = deltaGQL.load_latest_version("GQL_REQ_HDR")
-production_gql_req_dflt_tbl = deltaGQL.load_latest_version("GQL_REQ_DFLT_TBL")
-production_gql_req_line = deltaGQL.load_latest_version("GQL_REQ_LINE")
-production_gql_mb_req_hold_hdr = deltaGQL.load_latest_version("GQL_MB_REQ_HOLD_HDR")
-production_gql_req_ln_distrib = deltaGQL.load_latest_version("GQL_REQ_LN_DISTRIB")
-production_gql_pv_req_total = deltaGQL.load_latest_version("GQL_PV_REQ_TOTAL")
+production_gql_req_hdr = deltaGQL.load_latest_version(deltapath+"/GQL_REQ_HDR")
+production_gql_req_dflt_tbl = deltaGQL.load_latest_version(deltapath+"/GQL_REQ_DFLT_TBL")
+production_gql_req_line = deltaGQL.load_latest_version(deltapath+"/GQL_REQ_LINE")
+production_gql_mb_req_hold_hdr = deltaGQL.load_latest_version(deltapath+"/GQL_MB_REQ_HOLD_HDR")
+production_gql_req_ln_distrib = deltaGQL.load_latest_version(deltapath+"/GQL_REQ_LN_DISTRIB")
+production_gql_pv_req_total = deltaGQL.load_latest_version(deltapath+"/GQL_PV_REQ_TOTAL")
 print("Loaded monthly tables")
 
 # Load dev dfs: 
-dev_gql_req_hdr = deltaGQL.load_latest_version("GQL_REQ_HDR-daily_pulls")
-dev_gql_req_dflt_tbl = deltaGQL.load_latest_version("GQL_REQ_DFLT_TBL-daily_pulls")
-dev_gql_req_line = deltaGQL.load_latest_version("GQL_REQ_LINE-daily_pulls")
-dev_gql_mb_req_hold_hdr = deltaGQL.load_latest_version("GQL_MB_REQ_HOLD_HDR-daily_pulls")
-dev_gql_req_ln_distrib = deltaGQL.load_latest_version("GQL_REQ_LN_DISTRIB-daily_pulls")
-dev_gql_pv_req_total = deltaGQL.load_latest_version("GQL_PV_REQ_TOTAL-daily_pulls")
+dev_gql_req_hdr = deltaGQL.load_latest_version(deltapath+"/GQL_REQ_HDR-daily_pulls")
+dev_gql_req_dflt_tbl = deltaGQL.load_latest_version(deltapath+"/GQL_REQ_DFLT_TBL-daily_pulls")
+dev_gql_req_line = deltaGQL.load_latest_version(deltapath+"/GQL_REQ_LINE-daily_pulls")
+dev_gql_mb_req_hold_hdr = deltaGQL.load_latest_version(deltapath+"/GQL_MB_REQ_HOLD_HDR-daily_pulls")
+dev_gql_req_ln_distrib = deltaGQL.load_latest_version(deltapath+"/GQL_REQ_LN_DISTRIB-daily_pulls")
+dev_gql_pv_req_total = deltaGQL.load_latest_version(deltapath+"/GQL_PV_REQ_TOTAL-daily_pulls")
 print("loaded daily tables")
 
 # Load pks: 

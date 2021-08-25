@@ -5,13 +5,13 @@ import xlsxwriter
 import sys
 import shutil
 import subprocess
+import deltaGQL
 from dateutil.relativedelta import relativedelta
 from pyspark.sql.functions import lit
 from pyspark.sql import SparkSession, Window
 from pyspark.sql.functions import col, row_number
 from delta.tables import *
 from pyspark.sql.types import *
-import deltaGQL
 
 '''
 Check if spark session is already running or create new one
@@ -122,17 +122,20 @@ def pandas_to_spark(pandas_df):
 def rename_columns(df):
     '''
     Removes whitespaces, "?", ":", "$_" and "." from column names.
+    Regex is need and coerce b/c future default is FALSE
     
     Args:
     df: pandas dataframe
 
     Returns:
     Returns pandas dataframe with renamed columns.
-    '''
     
-    df.columns = df.columns.str.replace(' ', '_')
-    df.columns = df.columns.str.replace('.', '')
-    df.columns = [x.replace('?', '') for x in [x.replace(':', '') for x in [x.replace('$_', '') for x in [x.replace('.', '') for x in [x.replace(' ', '_') for x in [x.upper() for x in df.columns]]]]]]
+    #df.columns = [x.replace('?', '') for x in [x.replace(':', '') for x in [x.replace('$_', '') for x in [x.replace('.', '') for x in [x.replace(' ', '_') for x in [x.upper() for x in df.columns]]]]]] 
+    '''
+    df.columns = [x.upper() for x in df.columns]
+    df.columns = df.columns.str.replace('[?,:,$,.]', '', regex=True)
+    df.columns = [x.strip() for x in df.columns]
+    df.columns = df.columns.str.replace(' ', '_', regex=True)
     return df
 
 
@@ -148,7 +151,6 @@ def add_timestamp(df):
     Pandas dataframe with additional column named "Last_Modified_Timestamp"
     '''
     df["Last_Modified_Timestamp"] = pd.Series([datetime.datetime.now()] * len(df))
-#   df = df.withColumn("Last_Modified_Timestamp", lit(datetime.datetime.now()))
     return df
 
 
@@ -297,34 +299,30 @@ def save_as(df, primary_keys, filepath, save_file_as = "daily"):
     if ((save_file_as == 'monthly')|(save_file_as == 'yearly')):
         print("Load type: {}".format(save_file_as))
         save_as_delta(df, primary_keys, filepath)
-        if (os.path.exists(filepath+"-daily_pulls") == True):
-            print("Deleted filepath {}".format(filepath+"-daily_pulls"))
-            shutil.rmtree(filepath+"-daily_pulls")
-        else:
-            print("Filepath {} does not exists".format(filepath+"-daily_pulls"))
-            exit
+        delete_daily_pulls(filepath)
     else:
-        filepath = filepath+"-daily_pulls"
         print("Load type: daily")
-        save_as_delta(df, primary_keys, filepath)
+        save_as_delta(df, primary_keys, filepath+"-daily_pulls")
 
-
-def check_save_format_argument():
+        
+def delete_daily_pulls(filepath):
     '''
-    Checks for the save format system argument.                                                                                                                                                            
-    If argument is passed and has value "delta", then data is stored in delta format (as new version).                                                                                                     
-    For rest all cases, data is stored in excel format.                                                                                                                                                    
+    Deletes daily_pulls table for a particular query.
 
+    Args:
+    filepath: delta folder path along with querybasename 
+    
     Return:
     None.
     '''
-    
-    if (len(sys.argv)==4):
+    if (os.path.exists(filepath+"-daily_pulls") == True):
+        shutil.rmtree(filepath+"-daily_pulls")
+        print("Deleted filepath {}".format(filepath+"-daily_pulls"))
+    else:
+        print("Filepath {} does not exists".format(filepath+"-daily_pulls"))
         exit
-    elif ((len(sys.argv)==5)&(sys.argv[4]=="delta")):
-        return "delta"
-    
-    
+
+        
 def check_load_type_argument():
     '''                                                                                                                                                                                                    
     Checks for the load type system argument.                                                                                                                                                            
@@ -352,36 +350,8 @@ def get_values(dictionary, key):
     '''
     return dictionary.get(key)
 
-def yearly_historical_pulls(querybasename, window):
-    '''
-    Pulls all the historical data starting from 01/01/2005 till today, in yearly intervals. Runs the tape file of specified parameterised querybasename,
-    pulls data based in specified window and then upserts & saves as monthly delta table. After saving the data, deletes the daily_pulls table for that querry.
 
-    Args:
-    querybasename: querybasename of the table which we want to pull
-    window: time window in terms of years. Only takes whole numbers.
-
-    Returns:
-    None.
-    '''
-    file="/home/rubix/Desktop/Project-Ducttape/tape-"+querybasename.lower()+".sh"
-    start_date = datetime.date(2005, 1, 1)
-    end_date = start_date
-    curr_date = datetime.date(2020, 12, 31)
-  #  curr_date = datetime.date.today()
-    while end_date < curr_date:
-        end_date = start_date + relativedelta(years=int(window)) - datetime.timedelta(days=1)
-        if end_date <= curr_date:
-            output = subprocess.call([file, "both", "local", start_date.strftime("%m/%d/%Y"), end_date.strftime("%m/%d/%Y"), "monthly"])
-            start_date = end_date + datetime.timedelta(days=1)
-        else:
-            end_date = curr_date
-            output = subprocess.call([file, "both", "local", start_date.strftime("%m/%d/%Y"), end_date.strftime("%m/%d/%Y"), "monthly"])
-            start_date = end_date + datetime.timedelta(days=1)
-    filepath="/home/rubix/Desktop/Project-Ducttape/delta/"
-    print("Latest delta version of {} is version {}".format(querybasename, get_latest_version(filepath+querybasename)))
-
-def monthly_historical_pulls(querybasename, window):
+def historical_pulls(querybasename, quantity, unit):
     '''                                                                                                                                                                                              
     Pulls all the historical data starting from 01/01/2005 till today, in monthly intervals. Runs the tape file of specified parameterised querybasename,                                                  
     pulls data based in specified window and then upserts & saves as monthly delta table. After saving the data, deletes the daily_pulls table for that query.                                           
@@ -397,8 +367,12 @@ def monthly_historical_pulls(querybasename, window):
     start_date = datetime.date(2005, 1, 1)
     end_date = start_date
     curr_date = datetime.date.today()                                                                                                                                                                     
+ #  curr_date = datetime.date(2021, 7, 31)
     while end_date < curr_date:
-        end_date = start_date + relativedelta(months=int(window)) - datetime.timedelta(days=1)
+        if unit=='months':
+            end_date = start_date + relativedelta(months=int(quantity)) - datetime.timedelta(days=1)
+        elif unit=='years':
+            end_date = start_date + relativedelta(years=int(quantity)) - datetime.timedelta(days=1)
         if end_date <= curr_date:
             output = subprocess.call([file, "both", "local", start_date.strftime("%m/%d/%Y"), end_date.strftime("%m/%d/%Y"), "monthly"])
             start_date = end_date + datetime.timedelta(days=1)
@@ -406,8 +380,8 @@ def monthly_historical_pulls(querybasename, window):
             end_date = curr_date
             output = subprocess.call([file, "both", "local", start_date.strftime("%m/%d/%Y"), end_date.strftime("%m/%d/%Y"), "monthly"])
             start_date = end_date + datetime.timedelta(days=1)
-    filepath="/home/rubix/Desktop/Project-Ducttape/delta/"
-    print("Latest delta version of {} is version {}".format(querybasename, get_latest_version(filepath+querybasename)))
+    print("Latest delta version of {} is version {}".format(querybasename, get_latest_version(os.getenv("RUBIXTAPEDELTAPATH")+'/'+querybasename)))
+
     
 def pull_historical_data(querybasename, quantity, unit=None):
     '''
@@ -421,13 +395,12 @@ def pull_historical_data(querybasename, quantity, unit=None):
     Returns:
     None.
     '''
-    if (unit==None)|(unit=='None')|(unit=='yearly')|(unit=='years'):
-        yearly_historical_pulls(querybasename, quantity)
+    if unit not in ('years', 'yearly','monthly','months', None):
+        print("Please check value of Unit. Unit should be either monthly or yearly.")
     elif (unit=='monthly')|(unit=='months'):
-        monthly_historical_pulls(querybasename, quantity)
+        historical_pulls(querybasename, quantity, 'months')
     else:
-        print("Unit should be either monthly or yearly.")
-
+        historical_pulls(querybasename, quantity, 'years')
 
 def check_argument(arg_num):
     '''
@@ -441,9 +414,11 @@ def check_argument(arg_num):
     Value of the argument at index arg_num.
     '''
     if (len(sys.argv)==arg_num):
+        arg_val = None
         exit
-    elif ((len(sys.argv)==(arg_num+1))&((sys.argv[arg_num]=="months")|(sys.argv[arg_num]=="monthly")|(sys.argv[arg_num]=="years")|(sys.argv[arg_num]=="yearly"))):
-        return sys.argv[arg_num]
+    elif ((len(sys.argv)==(arg_num+1))):
+        arg_value = sys.argv[arg_num]
+        return arg_value
 
 #function to create subset for qty
 def qty_subset(raw_df):

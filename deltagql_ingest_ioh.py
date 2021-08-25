@@ -8,23 +8,22 @@ import pandas as pd
 from numpy import nan as NA
 import glob
 
-# Check if spark session is already running or create new one                                                                                                                                               
+# Check if spark session is already running or create new one                                                                                                                                              
 from pyspark.sql.session import SparkSession
-spark = SparkSession.builder.appName("DeltaTemplate") \
-        .config("spark.driver.memory", "4g") \
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
-        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
-        .getOrCreate()
+spark = SparkSession.builder.appName("DeltaTemplate").getOrCreate()
 
+# Go to Inventory On Hand for Scott folder and get a list of all files
 path = '/home/rubix/O_drive_mnt_pt/INVENTORY/Warehouse Logistics/Reports & Publications/Kate Cairns/Inventory On Hand for Scott/DATA/'
 files = os.listdir(path)
 print("Total number of files: {}".format(len(files)))
 
+# Filter only excel files
 files1 = []
 for i in files:
     if i.endswith('.xlsx'):
         files1.append(i)
-        
+
+# Sort filenames list based on dates in file name        
 files2 = [i.strip('.xlsx') for i in [i.strip('KJ_INV_BY_BASE_') for i in files1]]
 files2.sort(key=lambda date: dt.strptime(date, "%d%b%Y"))
 
@@ -35,8 +34,10 @@ for i in files2:
     
 print("Total number of files after arranging chronologically: {}".format(len(files3)))
 
+# Declare schema for IOH
 schema ={'Unit': object, 'Item': object, 'Qty On Hand': float, 'On Hand Value': float, 'Last Ann': float, 'Util Type': object,'$ LTM Demand': float, 'Descr': object, 'Descr.1': object, 'Descr.2': object, 'Status Current': object,'Reorder Pt': int, 'Reord Qty': int, 'Max Qty': float, 'Pull_Date': datetime, 'Avg Value': float,'Std UOM': object, 'Average Unit Cost': float, 'Check': object, 'RL Deactivate Item?': object,'Replenishment Flag': object, 'Unnamed: 4': object, 'Avg Cost': float, 'RL List': object, 'Min': object}
 
+# Read excel files chronologically, rename columns, add timestamp, convert to spark dataframe and ingest into delta table 
 i=1
 for file in files3:
     if file.endswith('.xlsx'):

@@ -9,17 +9,12 @@ import flask_graphql
 import gc
 from flask import Flask
 from flask_graphql import GraphQLView
-#os.chdir("/home/rubix/Desktop/Project-Ducttape/scripts/")
 import deltaGQL
 import json
 
 # Check if spark session is already running or create new one
 from pyspark.sql.session import SparkSession
-spark = SparkSession.builder.appName("DeltaTemplate") \
-        .config("spark.driver.memory", "4g") \
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
-        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
-        .getOrCreate()
+spark = SparkSession.builder.appName("DeltaTemplate").getOrCreate()
 
 # Load latest data:
 deltapath = os.getenv("RUBIXTAPEDELTAPATH")
